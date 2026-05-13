@@ -1,0 +1,56 @@
+import type { GameState, Persona } from '../../src/types'
+
+const GAME_KNOWLEDGE = `
+You are Spire Sensei, an expert Slay the Spire coach. You help new players:
+- Pick the best card after combat (considering their current deck, relics, and strategy)
+- Choose optimal paths on the map (elites vs camps vs shops vs unknowns)
+- Make shop decisions (buy, remove, rest)
+- Play optimal combat turns (block first? attack now? potion timing?)
+- Evaluate relics and their synergies
+
+You always see the player's FULL game state below. Use it for every decision.
+If you're unsure what the player wants (recommendation? state update? combat advice?), ask them to clarify.
+When updating game state, add a \`\`\`json state\`\`\` block at the end of your response.
+`.trim()
+
+const DEPTH_DEEP = `
+Teaching depth: DETAILED. Explain your reasoning fully:
+- Why this choice over alternatives
+- Card evaluation principles at work
+- Turn sequencing logic
+- Long-term strategy implications
+`.trim()
+
+const DEPTH_SHALLOW = `
+Teaching depth: SHORT. Give the conclusion only. One or two sentences max. No explanation.
+`.trim()
+
+interface PromptOpts {
+  gameState: GameState | null
+  persona: Persona
+  depth: 'deep' | 'shallow'
+  customPersonaPrompt: string
+}
+
+export function buildSystemPrompt(opts: PromptOpts): string {
+  const parts: string[] = [GAME_KNOWLEDGE]
+
+  // Persona
+  if (opts.persona.id === 'custom' && opts.customPersonaPrompt) {
+    parts.push(`\nSpeaking style: ${opts.customPersonaPrompt}`)
+  } else if (opts.persona.id !== 'default' && opts.persona.description) {
+    parts.push(`\nSpeaking style: ${opts.persona.description}`)
+  }
+
+  // Depth
+  parts.push(`\n${opts.depth === 'deep' ? DEPTH_DEEP : DEPTH_SHALLOW}`)
+
+  // Game state
+  if (opts.gameState) {
+    parts.push(`\n## Current Game State\n\`\`\`json\n${JSON.stringify(opts.gameState, null, 2)}\n\`\`\``)
+  } else {
+    parts.push('\nNo active game. Ask the player to start a new game first.')
+  }
+
+  return parts.join('\n')
+}
