@@ -1,0 +1,203 @@
+:root {
+  /* === Core Palette === */
+  --bg-deep: #0d0a0f;
+  --bg-primary: #1a121f;
+  --bg-secondary: #241c2a;
+  --bg-card: #1e1825;
+  --bg-elevated: #2a2133;
+  --bg-input: #18131f;
+
+  /* === Gold Accents === */
+  --gold: #c9a96e;
+  --gold-light: #dfc08a;
+  --gold-dark: #a0803e;
+  --gold-dim: #6b5530;
+
+  /* === Text === */
+  --text-primary: #e8dcc8;
+  --text-secondary: #a09888;
+  --text-muted: #6b6070;
+  --text-gold: #c9a96e;
+
+  /* === Semantic === */
+  --hp-red: #c0392b;
+  --hp-red-glow: #e74c3c;
+  --positive-green: #27ae60;
+  --warning-amber: #d4a017;
+
+  /* === Borders === */
+  --border-subtle: #2a2233;
+  --border-gold: #c9a96e44;
+  --border-gold-active: #c9a96e88;
+
+  /* === Shadows === */
+  --shadow-card: 0 2px 8px rgba(0,0,0,0.4), 0 0 1px rgba(201,169,110,0.1);
+  --shadow-elevated: 0 4px 16px rgba(0,0,0,0.5), 0 0 2px rgba(201,169,110,0.15);
+  --shadow-gold: 0 0 12px rgba(201,169,110,0.12);
+
+  /* === Typography === */
+  --font-display: 'Georgia', 'Times New Roman', serif;
+  --font-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', sans-serif;
+  --font-mono: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+
+  /* === Spacing === */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 32px;
+
+  /* === Radii === */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-card: 6px;
+
+  /* === Transitions === */
+  --transition-fast: 150ms ease;
+  --transition-normal: 250ms ease;
+  --transition-slow: 400ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* === Texture Overlay (body) === */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(201, 169, 110, 0.008) 2px,
+      rgba(201, 169, 110, 0.008) 4px
+    ),
+    radial-gradient(
+      ellipse at 50% 0%,
+      rgba(201, 169, 110, 0.03) 0%,
+      transparent 60%
+    );
+}
+
+/* === Global Reset === */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html, body, #root {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+}
+
+body {
+  font-family: var(--font-body);
+  background: var(--bg-deep);
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* === Scrollbar === */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: var(--gold-dim);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover { background: var(--gold-dark); }
+
+/* === Selection === */
+::selection {
+  background: var(--gold-dark);
+  color: var(--text-primary);
+}
+
+/* === Card Panel === */
+.panel-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+}
+
+.panel-card.gold-border {
+  border-color: var(--border-gold);
+  box-shadow: var(--shadow-gold);
+}
+
+/* === Gold Divider === */
+.gold-divider {
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--gold-dim) 20%,
+    var(--gold) 50%,
+    var(--gold-dim) 80%,
+    transparent
+  );
+  margin: var(--space-md) 0;
+}
+
+/* === Section Title === */
+.section-title {
+  font-family: var(--font-display);
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: var(--space-sm);
+}
+
+/* === Button Base === */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: 8px 16px;
+  border: 1px solid var(--border-gold);
+  border-radius: var(--radius-md);
+  background: var(--bg-elevated);
+  color: var(--text-gold);
+  font-family: var(--font-display);
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+.btn:hover {
+  background: var(--gold-dark);
+  border-color: var(--gold);
+  color: var(--text-primary);
+  box-shadow: var(--shadow-gold);
+}
+.btn:active { transform: translateY(1px); }
+
+.btn-primary {
+  background: var(--gold-dark);
+  border-color: var(--gold);
+  color: var(--bg-deep);
+  font-weight: 600;
+}
+.btn-primary:hover {
+  background: var(--gold);
+  color: var(--bg-deep);
+}
+
+/* === Badge === */
+.badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+.badge-gold {
+  background: var(--gold-dark);
+  color: var(--bg-deep);
+}
+.badge-upgraded {
+  background: linear-gradient(135deg, var(--gold-dark), var(--gold));
+  color: var(--bg-deep);
+}
