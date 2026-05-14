@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { AppLayout } from './components/Layout/AppLayout'
 import { useGameState } from './hooks/useGameState'
 import { useChat } from './hooks/useChat'
+import { SettingsDialog } from './components/Settings/SettingsDialog'
 import type { AppConfig } from './types'
 
 const DEFAULT_CONFIG: AppConfig = {
@@ -27,6 +28,7 @@ function App() {
 
   const { messages, sending, sendMessage } = useChat()
   const [config, setConfig] = useState<AppConfig>(DEFAULT_CONFIG)
+  const [showSettings, setShowSettings] = useState(false)
 
   const handleConfigChange = (partial: Partial<AppConfig>) => {
     setConfig(prev => ({ ...prev, ...partial }))
@@ -37,20 +39,31 @@ function App() {
   }
 
   return (
-    <AppLayout
-      gameState={gameState}
-      currentPath={currentPath}
-      savedGames={savedGames}
-      loading={loading}
-      config={config}
-      sending={sending}
-      onGameStateChange={updateGameState}
-      onCreateGame={createGame}
-      onSwitchGame={switchGame}
-      onConfigChange={handleConfigChange}
-      messages={messages}
-      onSendMessage={handleSendMessage}
-    />
+    <>
+      <AppLayout
+        gameState={gameState}
+        currentPath={currentPath}
+        savedGames={savedGames}
+        loading={loading}
+        config={config}
+        sending={sending}
+        onGameStateChange={updateGameState}
+        onCreateGame={createGame}
+        onSwitchGame={switchGame}
+        onConfigChange={handleConfigChange}
+        onOpenSettings={() => setShowSettings(true)}
+        messages={messages}
+        onSendMessage={handleSendMessage}
+      />
+
+      {showSettings && (
+        <SettingsDialog
+          config={config}
+          onConfigChange={handleConfigChange}
+          onClose={() => setShowSettings(false)}
+        />
+      )}
+    </>
   )
 }
 

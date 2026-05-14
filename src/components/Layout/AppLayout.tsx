@@ -19,11 +19,12 @@ interface Props {
   onCreateGame: (character: string) => void
   onSwitchGame: (path: string) => void
   onConfigChange: (config: Partial<AppConfig>) => void
+  onOpenSettings: () => void
   messages: ChatMessage[]
   onSendMessage: (text: string, imageBase64?: string) => void
 }
 
-export function AppLayout({ gameState, currentPath, savedGames, loading, config, sending, onGameStateChange, onCreateGame, onSwitchGame, onConfigChange, messages, onSendMessage }: Props) {
+export function AppLayout({ gameState, currentPath, savedGames, loading, config, sending, onGameStateChange, onCreateGame, onSwitchGame, onConfigChange, onOpenSettings, messages, onSendMessage }: Props) {
   return (
     <div style={{
       display: 'flex',
@@ -96,6 +97,7 @@ export function AppLayout({ gameState, currentPath, savedGames, loading, config,
           sending={sending}
           config={config}
           onConfigChange={onConfigChange}
+          onOpenSettings={onOpenSettings}
           onSendMessage={onSendMessage}
         />
       </main>

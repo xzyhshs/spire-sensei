@@ -9,10 +9,11 @@ interface Props {
   sending: boolean
   config: AppConfig
   onConfigChange: (config: Partial<AppConfig>) => void
+  onOpenSettings: () => void
   onSendMessage: (text: string, imageBase64?: string) => void
 }
 
-export function ChatPanel({ messages, sending, config, onConfigChange, onSendMessage }: Props) {
+export function ChatPanel({ messages, sending, config, onConfigChange, onOpenSettings, onSendMessage }: Props) {
   const messageListRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -42,7 +43,7 @@ export function ChatPanel({ messages, sending, config, onConfigChange, onSendMes
         }}>
           Conversation
         </div>
-        <ChatToolbar config={config} onConfigChange={onConfigChange} />
+        <ChatToolbar config={config} onConfigChange={onConfigChange} onOpenSettings={onOpenSettings} />
       </header>
 
       {/* Messages */}

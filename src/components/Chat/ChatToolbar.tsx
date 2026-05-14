@@ -3,6 +3,7 @@ import type { AppConfig, Persona } from '../../types'
 interface Props {
   config?: AppConfig
   onConfigChange?: (config: Partial<AppConfig>) => void
+  onOpenSettings?: () => void
 }
 
 const PERSONAS: Persona[] = [
@@ -13,7 +14,7 @@ const PERSONAS: Persona[] = [
   { id: 'custom', name: '✏ 自定义', description: '', preset: false }
 ]
 
-export function ChatToolbar({ config, onConfigChange }: Props) {
+export function ChatToolbar({ config, onConfigChange, onOpenSettings }: Props) {
   const depth = config?.depth || 'deep'
   const persona = config?.persona || 'default'
 
@@ -83,6 +84,29 @@ export function ChatToolbar({ config, onConfigChange }: Props) {
           </option>
         ))}
       </select>
+
+      {/* Settings gear */}
+      {onOpenSettings && (
+        <button
+          onClick={onOpenSettings}
+          title="Settings"
+          style={{
+            width: '28px', height: '28px',
+            border: '1px solid var(--border-subtle)',
+            borderRadius: 'var(--radius-sm)',
+            background: 'var(--bg-input)',
+            color: 'var(--text-muted)',
+            cursor: 'pointer',
+            fontSize: '14px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            transition: 'all var(--transition-fast)'
+          }}
+        >
+          ⚙
+        </button>
+      )}
     </div>
   )
 }
