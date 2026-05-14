@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { AppLayout } from './components/Layout/AppLayout'
 import { useGameState } from './hooks/useGameState'
 import { useChat } from './hooks/useChat'
@@ -6,10 +6,10 @@ import { SettingsDialog } from './components/Settings/SettingsDialog'
 import type { AppConfig } from './types'
 
 const DEFAULT_CONFIG: AppConfig = {
-  apiProvider: 'deepseek',
+  vendorName: '',
   apiKey: '',
   baseUrl: 'https://api.deepseek.com',
-  model: 'deepseek-chat',
+  model: 'deepseek-v4-pro',
   depth: 'deep',
   persona: 'default',
   customPersonaPrompt: ''
@@ -28,10 +28,22 @@ function App() {
 
   const { messages, sending, sendMessage } = useChat()
   const [config, setConfig] = useState<AppConfig>(DEFAULT_CONFIG)
+  const [configLoaded, setConfigLoaded] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
+
+  // Load config from disk on startup
+  useEffect(() => {
+    window.electronAPI.getConfig().then((saved: Record<string, unknown>) => {
+      setConfig(prev => ({ ...prev, ...saved }))
+      setConfigLoaded(true)
+    }).catch(() => setConfigLoaded(true))
+  }, [])
 
   const handleConfigChange = (partial: Partial<AppConfig>) => {
     setConfig(prev => ({ ...prev, ...partial }))
+    for (const [key, value] of Object.entries(partial)) {
+      window.electronAPI.setConfig(key, value)
+    }
   }
 
   const handleSendMessage = (text: string, imageBase64?: string) => {

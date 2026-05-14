@@ -1,8 +1,8 @@
 {
-  "apiProvider": "deepseek",
+  "vendorName": "",
   "apiKey": "",
   "baseUrl": "https://api.deepseek.com",
-  "model": "deepseek-chat",
+  "model": "deepseek-v4-pro",
   "depth": "deep",
   "persona": "default",
   "customPersonaPrompt": ""

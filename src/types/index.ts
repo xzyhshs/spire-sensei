@@ -34,7 +34,7 @@ export interface Persona {
 }
 
 export interface AppConfig {
-  apiProvider: 'deepseek' | 'custom'
+  vendorName: string
   apiKey: string
   baseUrl: string
   model: string

@@ -13,13 +13,22 @@ export default defineConfig({
         entry: '../electron/main.ts',
         vite: {
           build: {
+            outDir: '../dist-electron',
             rollupOptions: {
               external: ['electron', 'path', 'fs']
             }
           }
         }
       },
-      { entry: '../electron/preload.ts', onstart(options) { options.reload() } }
+      {
+        entry: '../electron/preload.ts',
+        vite: {
+          build: {
+            outDir: '../dist-electron'
+          }
+        },
+        onstart(options) { options.reload() }
+      }
     ]),
     renderer()
   ],

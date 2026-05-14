@@ -29,7 +29,6 @@ function loadConfig() {
 }
 
 function saveConfig(config: Record<string, unknown>) {
-  ensureDir(userDataPath)
   fs.writeFileSync(configPath, JSON.stringify(config, null, 2), 'utf-8')
 }
 
@@ -72,16 +71,22 @@ function registerIpcHandlers() {
   ipcMain.handle('api:sendMessage', async (_event, opts: {
     text: string
     imageBase64?: string
+    config?: Record<string, unknown>
   }) => {
-    const config = loadConfig()
+    const diskConfig = loadConfig()
+    const mergedConfig = { ...diskConfig, ...opts.config }
     const appConfig = {
-      apiProvider: (config.apiProvider as string) || 'deepseek',
-      apiKey: (config.apiKey as string) || '',
-      baseUrl: (config.baseUrl as string) || 'https://api.deepseek.com',
-      model: (config.model as string) || 'deepseek-chat',
-      depth: (config.depth as 'deep' | 'shallow') || 'deep',
-      persona: (config.persona as string) || 'default',
-      customPersonaPrompt: (config.customPersonaPrompt as string) || ''
+      vendorName: (mergedConfig.vendorName as string) || '',
+      apiKey: (mergedConfig.apiKey as string) || '',
+      baseUrl: (mergedConfig.baseUrl as string) || 'https://api.deepseek.com/v1',
+      model: (mergedConfig.model as string) || 'deepseek-v4-pro',
+      depth: (mergedConfig.depth as 'deep' | 'shallow') || 'deep',
+      persona: (mergedConfig.persona as string) || 'default',
+      customPersonaPrompt: (mergedConfig.customPersonaPrompt as string) || ''
+    }
+
+    if (!appConfig.apiKey) {
+      return JSON.stringify({ reply: '请先在设置中配置 API Key。', gameState: null })
     }
 
     const personaId = appConfig.persona
@@ -92,22 +97,30 @@ function registerIpcHandlers() {
     const activeGame = games.length > 0 ? games[0] : null
     const gameState = activeGame ? readGame(activeGame.path) : null
 
-    const { reply } = await sendMessage({
-      text: opts.text,
-      imageBase64: opts.imageBase64,
-      gameFilePath: activeGame?.path || null,
-      config: appConfig,
-      persona,
-      gameState
-    })
+    try {
+      const { reply } = await sendMessage({
+        text: opts.text,
+        imageBase64: opts.imageBase64,
+        gameFilePath: activeGame?.path || null,
+        config: appConfig,
+        persona,
+        gameState
+      })
 
-    // Reload game state if it was updated
-    if (activeGame && gameState) {
-      const updated = readGame(activeGame.path)
-      return JSON.stringify({ reply, gameState: updated })
+      // Reload game state if it was updated
+      if (activeGame && gameState) {
+        const updated = readGame(activeGame.path)
+        return JSON.stringify({ reply, gameState: updated })
+      }
+
+      return JSON.stringify({ reply, gameState: null })
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : '未知错误'
+      if (msg.includes('image_url')) {
+        return JSON.stringify({ reply: `图片发送失败：${msg}`, gameState: null })
+      }
+      return JSON.stringify({ reply: `API 请求失败：${msg}`, gameState: null })
     }
-
-    return JSON.stringify({ reply, gameState: null })
   })
 }
 

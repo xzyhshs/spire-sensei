@@ -38,24 +38,31 @@ export function useChat() {
     setSending(true)
 
     try {
-      const reply = await window.electronAPI.sendMessage({
+      const raw = await window.electronAPI.sendMessage({
         text: opts.text,
-        imageBase64: opts.imageBase64
+        imageBase64: opts.imageBase64,
+        config: opts.config
       })
+
+      const parsed = JSON.parse(raw)
+      const replyText: string = parsed.reply || raw
 
       const aiMsg: ChatMessage = {
         id: Date.now().toString(36) + Math.random().toString(36).slice(2, 8),
         role: 'assistant',
-        text: reply,
+        text: replyText,
         timestamp: Date.now()
       }
       setMessages(prev => [...prev, aiMsg])
-    } catch {
-      // Fallback: electronAPI not available (dev mode in browser)
+    } catch (err) {
+      const fallbackText = window.electronAPI
+        ? `AI 请求失败：${err instanceof Error ? err.message : '未知错误'}`
+        : '（开发模式）AI 服务将在配置 API Key 后可用。'
+
       const aiMsg: ChatMessage = {
         id: Date.now().toString(36) + Math.random().toString(36).slice(2, 8),
         role: 'assistant',
-        text: '（开发模式）AI 服务将在配置 API Key 后可用。',
+        text: fallbackText,
         timestamp: Date.now()
       }
       setMessages(prev => [...prev, aiMsg])
