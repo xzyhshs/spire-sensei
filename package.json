@@ -4,11 +4,14 @@
   "description": "Slay the Spire beginner guide client",
   "main": "dist-electron/main.js",
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --config vite.demo.config.ts",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
+    "test": "vitest --run",
+    "test:watch": "vitest",
     "electron:dev": "concurrently \"vite\" \"wait-on http://localhost:5173 && electron .\"",
-    "electron:build": "vite build && electron-builder"
+    "electron:build": "vite build && electron-builder",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "react": "^18.3.1",
@@ -25,6 +28,7 @@
     "vite": "^5.4.0",
     "vite-plugin-electron": "^0.28.0",
     "vite-plugin-electron-renderer": "^0.14.0",
+    "vitest": "^4.1.6",
     "wait-on": "^7.2.0"
   }
 }
