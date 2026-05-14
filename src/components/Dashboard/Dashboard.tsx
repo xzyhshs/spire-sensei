@@ -1,8 +1,20 @@
 import type { GameState, Card } from '../../types'
+import { GameSelector } from './GameSelector'
+
+interface SavedGame {
+  path: string
+  character: string
+  updated: string
+}
 
 interface Props {
   gameState: GameState | null
+  currentPath: string | null
+  savedGames: SavedGame[]
+  loading: boolean
   onGameStateChange: (state: GameState) => void
+  onCreateGame: (character: string) => void
+  onSwitchGame: (path: string) => void
 }
 
 function HpBar({ hp }: { hp: string }) {
@@ -87,24 +99,30 @@ function CardItem({ card }: { card: Card }) {
   )
 }
 
-export function Dashboard({ gameState }: Props) {
-  if (!gameState) {
-    return (
-      <div style={{
-        display: 'flex', flexDirection: 'column', alignItems: 'center',
-        justifyContent: 'center', height: '100%', padding: '40px 20px', textAlign: 'center'
-      }}>
-        <div style={{ fontSize: '48px', marginBottom: '16px', opacity: 0.3 }}>🃏</div>
-        <p style={{ color: 'var(--text-muted)', fontSize: '14px', marginBottom: '20px' }}>
-          No active game
-        </p>
-        <button className="btn btn-primary">✦ New Game</button>
-      </div>
-    )
-  }
-
+export function Dashboard({ gameState, currentPath, savedGames, loading, onCreateGame, onSwitchGame }: Props) {
   return (
     <div style={{ padding: '16px' }}>
+      {/* Game Selector */}
+      <GameSelector
+        savedGames={savedGames}
+        currentPath={currentPath}
+        loading={loading}
+        onCreateGame={onCreateGame}
+        onSwitchGame={onSwitchGame}
+      />
+
+      {!gameState ? (
+        <div style={{
+          display: 'flex', flexDirection: 'column', alignItems: 'center',
+          justifyContent: 'center', padding: '40px 20px', textAlign: 'center'
+        }}>
+          <div style={{ fontSize: '48px', marginBottom: '16px', opacity: 0.3 }}>🃏</div>
+          <p style={{ color: 'var(--text-muted)', fontSize: '14px' }}>
+            Select or create a game above to begin
+          </p>
+        </div>
+      ) : (
+      <>
       {/* Status Panel */}
       <div className="panel-card gold-border" style={{ padding: '16px', marginBottom: '16px' }}>
         <div className="section-title">Status</div>
@@ -167,6 +185,8 @@ export function Dashboard({ gameState }: Props) {
             {gameState.options}
           </div>
         </div>
+      )}
+      </>
       )}
     </div>
   )

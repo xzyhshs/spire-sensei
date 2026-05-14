@@ -2,14 +2,25 @@ import { Dashboard } from '../Dashboard/Dashboard'
 import { ChatPanel } from '../Chat/ChatPanel'
 import type { GameState, ChatMessage } from '../../types'
 
+interface SavedGame {
+  path: string
+  character: string
+  updated: string
+}
+
 interface Props {
   gameState: GameState | null
+  currentPath: string | null
+  savedGames: SavedGame[]
+  loading: boolean
   onGameStateChange: (state: GameState) => void
+  onCreateGame: (character: string) => void
+  onSwitchGame: (path: string) => void
   messages: ChatMessage[]
   onSendMessage: (msg: ChatMessage) => void
 }
 
-export function AppLayout({ gameState, onGameStateChange, messages, onSendMessage }: Props) {
+export function AppLayout({ gameState, currentPath, savedGames, loading, onGameStateChange, onCreateGame, onSwitchGame, messages, onSendMessage }: Props) {
   return (
     <div style={{
       display: 'flex',
@@ -58,7 +69,15 @@ export function AppLayout({ gameState, onGameStateChange, messages, onSendMessag
 
         {/* Dashboard Content */}
         <div style={{ flex: 1, overflow: 'auto' }}>
-          <Dashboard gameState={gameState} onGameStateChange={onGameStateChange} />
+          <Dashboard
+            gameState={gameState}
+            currentPath={currentPath}
+            savedGames={savedGames}
+            loading={loading}
+            onGameStateChange={onGameStateChange}
+            onCreateGame={onCreateGame}
+            onSwitchGame={onSwitchGame}
+          />
         </div>
       </aside>
 

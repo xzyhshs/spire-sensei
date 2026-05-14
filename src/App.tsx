@@ -1,15 +1,30 @@
 import { useState } from 'react'
 import { AppLayout } from './components/Layout/AppLayout'
-import type { GameState, ChatMessage } from './types'
+import { useGameState } from './hooks/useGameState'
+import type { ChatMessage } from './types'
 
 function App() {
-  const [gameState, setGameState] = useState<GameState | null>(null)
+  const {
+    gameState,
+    currentPath,
+    savedGames,
+    loading,
+    createGame,
+    switchGame,
+    updateGameState
+  } = useGameState()
+
   const [messages, setMessages] = useState<ChatMessage[]>([])
 
   return (
     <AppLayout
       gameState={gameState}
-      onGameStateChange={setGameState}
+      currentPath={currentPath}
+      savedGames={savedGames}
+      loading={loading}
+      onGameStateChange={updateGameState}
+      onCreateGame={createGame}
+      onSwitchGame={switchGame}
       messages={messages}
       onSendMessage={(msg) => {
         setMessages(prev => [...prev, msg])
