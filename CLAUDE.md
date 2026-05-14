@@ -28,7 +28,7 @@ Electron + React 18 + Vite 5 + TypeScript 5.5
 | Phase 3 | 数据层（MD Parser/Writer/State Updater/Context Builder/Game Manager） | ✅ 完成 |
 | Phase 4 | Dashboard 数据接入（IPC wrappers, useGameState hook, GameSelector） | ✅ 完成 |
 | Phase 5 | Chat 面板数据接入（useChat hook, config 状态, image compressor） | ✅ 完成 |
-| Phase 6 | AI 集成（API Client + IPC + Settings） | ⏳ 待开发 |
+| Phase 6 | AI 集成（API Client + IPC handlers + Settings dialog） | ✅ 完成 |
 | Phase 7 | 打磨与打包（Error handling + Config + .exe） | ⏳ 待开发 |
 
 **GitHub:** https://github.com/xzyhshs/spire-sensei
