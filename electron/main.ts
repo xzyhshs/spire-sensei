@@ -6,10 +6,14 @@ import { sendMessage, PERSONAS } from './lib/api-client'
 import type { GameState } from '../src/types'
 
 let mainWindow: BrowserWindow | null = null
+let gamesDir: string
+let configPath: string
 
-const userDataPath = app.getPath('userData')
-const gamesDir = path.join(userDataPath, 'games')
-const configPath = path.join(userDataPath, 'config.json')
+function initPaths() {
+  const userDataPath = app.getPath('userData')
+  gamesDir = path.join(userDataPath, 'games')
+  configPath = path.join(userDataPath, 'config.json')
+}
 
 function ensureDir(dir: string) {
   if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true })
@@ -129,6 +133,7 @@ function createWindow() {
 }
 
 app.whenReady().then(() => {
+  initPaths()
   registerIpcHandlers()
   createWindow()
 })
