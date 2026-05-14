@@ -3,11 +3,7 @@ import { PersonaEditor } from './PersonaEditor'
 import type { AppConfig, Persona } from '../../types'
 
 const PERSONAS: Persona[] = [
-  { id: 'default', name: '默认', description: '', preset: true },
-  { id: 'lbw', name: '卢本伟', description: '口语化，东北腔，爱说"兄弟""干就完了"', preset: true },
-  { id: 'yujie', name: '东北雨姐', description: '东北方言，爽朗豪迈', preset: true },
-  { id: 'trump', name: '特朗普', description: '夸张自信，最高级形容词', preset: true },
-  { id: 'custom', name: '✏ 自定义', description: '', preset: false }
+  { id: 'default', name: '默认', description: '', preset: true }
 ]
 
 interface Props {
@@ -29,7 +25,6 @@ export function SettingsDialog({ config, onConfigChange, onClose }: Props) {
         background: 'rgba(0,0,0,0.6)',
         backdropFilter: 'blur(4px)'
       }}
-      onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
     >
       <div
         style={{
@@ -56,18 +51,6 @@ export function SettingsDialog({ config, onConfigChange, onClose }: Props) {
           }}>
             ⚙ Settings
           </h2>
-          <button
-            onClick={onClose}
-            style={{
-              width: '28px', height: '28px',
-              border: 'none', background: 'none',
-              color: 'var(--text-muted)', fontSize: '18px',
-              cursor: 'pointer', display: 'flex',
-              alignItems: 'center', justifyContent: 'center'
-            }}
-          >
-            ✕
-          </button>
         </div>
 
         {/* API Config */}
@@ -87,7 +70,7 @@ export function SettingsDialog({ config, onConfigChange, onClose }: Props) {
         {/* Close button */}
         <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
           <button className="btn btn-primary" onClick={onClose}>
-            Done
+            保存并退出
           </button>
         </div>
       </div>

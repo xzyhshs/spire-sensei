@@ -85,7 +85,7 @@ export function ApiConfig({ config, onChange }: Props) {
           API Key
         </label>
         <input
-          type="password"
+          type="text"
           value={config.apiKey}
           onChange={(e) => onChange({ apiKey: e.target.value })}
           placeholder="sk-..."

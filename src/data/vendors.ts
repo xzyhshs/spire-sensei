@@ -27,12 +27,8 @@ export const VENDORS: Vendor[] = [
     name: '通义千问',
     baseUrl: 'https://dashscope.aliyuncs.com/compatible-mode/v1',
     models: [
-      { id: 'qwen3.6-plus', name: 'Qwen3.6 Plus', note: '均衡主力，MoE 72B/18B，1M上下文，支持图/视频' },
-      { id: 'qwen3.6-flash', name: 'Qwen3.6 Flash', note: '极速低成本，MoE 35B/3B，1M上下文，高并发' },
-      { id: 'qwen3.6-max-preview', name: 'Qwen3.6 Max', note: '编程旗舰，能力最强，262K上下文，价格较高' },
-      { id: 'qwen3-max', name: 'Qwen3 Max (稳定)', note: '复杂任务最强稳定版，262K上下文，支持thinking' },
-      { id: 'qwen-plus', name: 'Qwen Plus', note: '性能/成本均衡，1M上下文，支持thinking' },
-      { id: 'qwen-flash', name: 'Qwen Flash', note: '极低成本快速响应，1M上下文' },
+      { id: 'qwen3-vl-235b-a22b-thinking', name: 'Qwen3-VL 235B', note: '旗舰MoE视觉推理，235B/22B激活，支持识图+深度思考' },
+      { id: 'qwen3-vl-32b-thinking', name: 'Qwen3-VL 32B', note: 'Dense 32B视觉推理，文档理解/空间感知，支持深度思考' },
     ]
   },
   {

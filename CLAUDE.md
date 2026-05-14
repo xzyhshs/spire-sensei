@@ -32,5 +32,11 @@ Electron + React 18 + Vite 5 + TypeScript 5.5
 | Phase 5 | Chat 面板数据接入（useChat hook, config 状态, image compressor） | ✅ 完成 |
 | Phase 6 | AI 集成（API Client + IPC handlers + Settings dialog） | ✅ 完成 |
 | Phase 7 | 打磨与打包（default-config, personas, electron-builder, scripts） | ✅ 完成 |
+| Phase 8 | 供应商/模型下拉 + 多厂商 API + 配置持久化 + DeepSeek V4 图片修复 | ✅ 完成 |
+
+**关键修复记录：**
+- DeepSeek V4 API 端点是 `https://api.deepseek.com/chat/completions`（无 `/v1`），`/v1` 前缀会导致视觉功能不可用
+- `api-client.ts` 的 URL 拼接逻辑：含版本路径（`/v\d+$` 或 `/api/paas/v\d+$`）时追加 `/chat/completions`，否则直接追加 `/chat/completions`
+- 配置持久化通过 `handleConfigChange` 实时写入 disk + `useEffect` 启动加载
 
 **GitHub:** https://github.com/xzyhshs/spire-sensei

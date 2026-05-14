@@ -7,11 +7,7 @@ interface Props {
 }
 
 const PERSONAS: Persona[] = [
-  { id: 'default', name: '默认', description: '', preset: true },
-  { id: 'lbw', name: '卢本伟', description: '口语化，东北腔，爱说"兄弟""干就完了"', preset: true },
-  { id: 'yujie', name: '东北雨姐', description: '东北方言，爽朗豪迈', preset: true },
-  { id: 'trump', name: '特朗普', description: '夸张自信，最高级形容词', preset: true },
-  { id: 'custom', name: '✏ 自定义', description: '', preset: false }
+  { id: 'default', name: '默认', description: '', preset: true }
 ]
 
 export function ChatToolbar({ config, onConfigChange, onOpenSettings }: Props) {

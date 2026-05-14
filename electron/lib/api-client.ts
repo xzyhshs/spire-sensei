@@ -16,11 +16,7 @@ interface SendMessageOpts {
 const DEFAULT_PERSONA: Persona = { id: 'default', name: '默认', description: '', preset: true }
 
 const PERSONAS: Persona[] = [
-  DEFAULT_PERSONA,
-  { id: 'lbw', name: '卢本伟', description: '口语化，东北腔，爱说"兄弟""干就完了"', preset: true },
-  { id: 'yujie', name: '东北雨姐', description: '东北方言，爽朗豪迈', preset: true },
-  { id: 'trump', name: '特朗普', description: '夸张自信，最高级形容词', preset: true },
-  { id: 'custom', name: '✏ 自定义', description: '', preset: false }
+  DEFAULT_PERSONA
 ]
 
 export { PERSONAS }
@@ -75,7 +71,7 @@ export async function sendMessage(opts: SendMessageOpts): Promise<{
   const model = opts.config.model
 
   const controller = new AbortController()
-  const timeout = setTimeout(() => controller.abort(), 60000)
+  const timeout = setTimeout(() => controller.abort(), 120000)
 
   try {
     const response = await fetch(apiUrl, {
