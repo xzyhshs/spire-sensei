@@ -6,7 +6,9 @@
   },
   "win": {
     "target": "nsis",
-    "icon": "resources/icon.ico"
+    "icon": "resources/icon.ico",
+    "signAndEditExecutable": false,
+    "verifyUpdateCodeSignature": false
   },
   "nsis": {
     "oneClick": false,
@@ -16,5 +18,7 @@
     "dist/**/*",
     "dist-electron/**/*",
     "resources/**/*"
-  ]
+  ],
+  "npmRebuild": false,
+  "nodeGypRebuild": false
 }
