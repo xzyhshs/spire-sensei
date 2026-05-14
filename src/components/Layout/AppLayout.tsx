@@ -1,6 +1,6 @@
 import { Dashboard } from '../Dashboard/Dashboard'
 import { ChatPanel } from '../Chat/ChatPanel'
-import type { GameState, ChatMessage } from '../../types'
+import type { GameState, ChatMessage, AppConfig } from '../../types'
 
 interface SavedGame {
   path: string
@@ -13,14 +13,17 @@ interface Props {
   currentPath: string | null
   savedGames: SavedGame[]
   loading: boolean
+  config: AppConfig
+  sending: boolean
   onGameStateChange: (state: GameState) => void
   onCreateGame: (character: string) => void
   onSwitchGame: (path: string) => void
+  onConfigChange: (config: Partial<AppConfig>) => void
   messages: ChatMessage[]
-  onSendMessage: (msg: ChatMessage) => void
+  onSendMessage: (text: string, imageBase64?: string) => void
 }
 
-export function AppLayout({ gameState, currentPath, savedGames, loading, onGameStateChange, onCreateGame, onSwitchGame, messages, onSendMessage }: Props) {
+export function AppLayout({ gameState, currentPath, savedGames, loading, config, sending, onGameStateChange, onCreateGame, onSwitchGame, onConfigChange, messages, onSendMessage }: Props) {
   return (
     <div style={{
       display: 'flex',
@@ -88,7 +91,13 @@ export function AppLayout({ gameState, currentPath, savedGames, loading, onGameS
         flexDirection: 'column',
         background: 'var(--bg-deep)'
       }}>
-        <ChatPanel messages={messages} onSendMessage={onSendMessage} />
+        <ChatPanel
+          messages={messages}
+          sending={sending}
+          config={config}
+          onConfigChange={onConfigChange}
+          onSendMessage={onSendMessage}
+        />
       </main>
     </div>
   )

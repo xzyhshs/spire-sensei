@@ -1,7 +1,18 @@
 import { useState } from 'react'
 import { AppLayout } from './components/Layout/AppLayout'
 import { useGameState } from './hooks/useGameState'
-import type { ChatMessage } from './types'
+import { useChat } from './hooks/useChat'
+import type { AppConfig } from './types'
+
+const DEFAULT_CONFIG: AppConfig = {
+  apiProvider: 'deepseek',
+  apiKey: '',
+  baseUrl: 'https://api.deepseek.com',
+  model: 'deepseek-chat',
+  depth: 'deep',
+  persona: 'default',
+  customPersonaPrompt: ''
+}
 
 function App() {
   const {
@@ -14,7 +25,16 @@ function App() {
     updateGameState
   } = useGameState()
 
-  const [messages, setMessages] = useState<ChatMessage[]>([])
+  const { messages, sending, sendMessage } = useChat()
+  const [config, setConfig] = useState<AppConfig>(DEFAULT_CONFIG)
+
+  const handleConfigChange = (partial: Partial<AppConfig>) => {
+    setConfig(prev => ({ ...prev, ...partial }))
+  }
+
+  const handleSendMessage = (text: string, imageBase64?: string) => {
+    sendMessage({ text, imageBase64: imageBase64 || '', config, gameState })
+  }
 
   return (
     <AppLayout
@@ -22,13 +42,14 @@ function App() {
       currentPath={currentPath}
       savedGames={savedGames}
       loading={loading}
+      config={config}
+      sending={sending}
       onGameStateChange={updateGameState}
       onCreateGame={createGame}
       onSwitchGame={switchGame}
+      onConfigChange={handleConfigChange}
       messages={messages}
-      onSendMessage={(msg) => {
-        setMessages(prev => [...prev, msg])
-      }}
+      onSendMessage={handleSendMessage}
     />
   )
 }

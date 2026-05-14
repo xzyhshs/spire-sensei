@@ -2,9 +2,10 @@ import { useState, useRef, useCallback } from 'react'
 
 interface Props {
   onSend: (text: string, imageBase64?: string) => void
+  disabled?: boolean
 }
 
-export function ChatInput({ onSend }: Props) {
+export function ChatInput({ onSend, disabled }: Props) {
   const [text, setText] = useState('')
   const [image, setImage] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -195,10 +196,10 @@ export function ChatInput({ onSend }: Props) {
         {/* Send button */}
         <button
           onClick={handleSend}
-          disabled={!canSend}
-          className={canSend ? 'btn btn-primary' : 'btn'}
+          disabled={!canSend || disabled}
+          className={canSend && !disabled ? 'btn btn-primary' : 'btn'}
           style={{
-            opacity: canSend ? 1 : 0.4,
+            opacity: canSend && !disabled ? 1 : 0.4,
             flexShrink: 0,
             height: '36px',
             padding: '0 16px'

@@ -6,12 +6,13 @@ import { ChatToolbar } from './ChatToolbar'
 
 interface Props {
   messages: ChatMessage[]
-  onSendMessage: (msg: ChatMessage) => void
-  config?: AppConfig
-  onConfigChange?: (config: Partial<AppConfig>) => void
+  sending: boolean
+  config: AppConfig
+  onConfigChange: (config: Partial<AppConfig>) => void
+  onSendMessage: (text: string, imageBase64?: string) => void
 }
 
-export function ChatPanel({ messages, onSendMessage, config, onConfigChange }: Props) {
+export function ChatPanel({ messages, sending, config, onConfigChange, onSendMessage }: Props) {
   const messageListRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -63,21 +64,26 @@ export function ChatPanel({ messages, onSendMessage, config, onConfigChange }: P
             {messages.map((msg) => (
               <MessageBubble key={msg.id} message={msg} />
             ))}
+            {sending && (
+              <div style={{
+                alignSelf: 'flex-start',
+                color: 'var(--text-muted)',
+                fontSize: '12px',
+                fontStyle: 'italic',
+                padding: '8px 16px'
+              }}>
+                Sensei is thinking...
+              </div>
+            )}
           </div>
         )}
       </div>
 
       {/* Input */}
-      <ChatInput onSend={(text, imageBase64) => {
-        const msg: ChatMessage = {
-          id: Date.now().toString(36) + Math.random().toString(36).slice(2, 8),
-          role: 'user',
-          text,
-          imageBase64,
-          timestamp: Date.now()
-        }
-        onSendMessage(msg)
-      }} />
+      <ChatInput
+        onSend={onSendMessage}
+        disabled={sending}
+      />
     </>
   )
 }
