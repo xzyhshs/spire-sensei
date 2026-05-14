@@ -62,11 +62,16 @@ export function applyStateUpdate(mdContent: string, update: StateUpdate): string
 }
 
 export function extractStateJson(aiResponse: string): StateUpdate | null {
-  const match = aiResponse.match(/```json state\n([\s\S]*?)\n```/)
-  if (!match) return null
+  // Forgiving regex: allow any whitespace after "json state", handle CRLF
+  const match = aiResponse.match(/```json state[\s\S]*?\n([\s\S]*?)```/)
+  if (!match) {
+    console.log('[state-updater] No ```json state block found in AI response')
+    return null
+  }
   try {
-    return JSON.parse(match[1])
-  } catch {
+    return JSON.parse(match[1].trim())
+  } catch (e) {
+    console.log('[state-updater] JSON parse failed:', e instanceof Error ? e.message : e)
     return null
   }
 }

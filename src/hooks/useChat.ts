@@ -22,7 +22,7 @@ export function useChat() {
     setMessages(prev => [...prev, msg])
   }, [])
 
-  const sendMessage = useCallback(async (opts: SendOpts) => {
+  const sendMessage = useCallback(async (opts: SendOpts): Promise<GameState | null> => {
     const userMsg: ChatMessage = {
       id: Date.now().toString(36) + Math.random().toString(36).slice(2, 8),
       role: 'user',
@@ -30,38 +30,51 @@ export function useChat() {
       imageBase64: opts.imageBase64,
       timestamp: Date.now()
     }
-    setMessages(prev => [...prev, userMsg])
+    const aiMsgId = Date.now().toString(36) + Math.random().toString(36).slice(2, 8)
+    const aiMsg: ChatMessage = {
+      id: aiMsgId,
+      role: 'assistant',
+      text: '',
+      timestamp: Date.now()
+    }
+    setMessages(prev => [...prev, userMsg, aiMsg])
     setSending(true)
 
     try {
-      const raw = await window.electronAPI.sendMessage({
-        text: opts.text,
-        imageBase64: opts.imageBase64,
-        config: opts.config
+      const result = await new Promise<GameState | null>((resolve) => {
+        const unsubChunk = window.electronAPI.onStreamChunk((text) => {
+          setMessages(prev => prev.map(m =>
+            m.id === aiMsgId ? { ...m, text: m.text + text } : m
+          ))
+        })
+
+        const unsubDone = window.electronAPI.onStreamDone(({ gameState }) => {
+          unsubChunk()
+          unsubDone()
+          unsubError()
+          resolve(gameState || null)
+        })
+
+        const unsubError = window.electronAPI.onStreamError((msg) => {
+          unsubChunk()
+          unsubDone()
+          unsubError()
+          setMessages(prev => prev.map(m =>
+            m.id === aiMsgId ? { ...m, text: msg } : m
+          ))
+          resolve(null)
+        })
+
+        window.electronAPI.sendMessageStream({
+          text: opts.text,
+          imageBase64: opts.imageBase64,
+          config: opts.config
+        })
       })
 
-      const parsed = JSON.parse(raw)
-      const replyText: string = parsed.reply || raw
-
-      const aiMsg: ChatMessage = {
-        id: Date.now().toString(36) + Math.random().toString(36).slice(2, 8),
-        role: 'assistant',
-        text: replyText,
-        timestamp: Date.now()
-      }
-      setMessages(prev => [...prev, aiMsg])
-    } catch (err) {
-      const fallbackText = window.electronAPI
-        ? `AI 请求失败：${err instanceof Error ? err.message : '未知错误'}`
-        : '（开发模式）AI 服务将在配置 API Key 后可用。'
-
-      const aiMsg: ChatMessage = {
-        id: Date.now().toString(36) + Math.random().toString(36).slice(2, 8),
-        role: 'assistant',
-        text: fallbackText,
-        timestamp: Date.now()
-      }
-      setMessages(prev => [...prev, aiMsg])
+      return result
+    } catch {
+      return null
     } finally {
       setSending(false)
     }

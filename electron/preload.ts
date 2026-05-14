@@ -8,5 +8,22 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getConfig: () => ipcRenderer.invoke('config:get'),
   setConfig: (key: string, value: unknown) => ipcRenderer.invoke('config:set', key, value),
   sendMessage: (opts: { text: string; imageBase64?: string }) =>
-    ipcRenderer.invoke('api:sendMessage', opts)
+    ipcRenderer.invoke('api:sendMessage', opts),
+  sendMessageStream: (opts: { text: string; imageBase64?: string }) =>
+    ipcRenderer.invoke('api:sendMessageStream', opts),
+  onStreamChunk: (cb: (text: string) => void) => {
+    const h = (_e: Electron.IpcRendererEvent, text: string) => cb(text)
+    ipcRenderer.on('api:chunk', h)
+    return () => { ipcRenderer.removeListener('api:chunk', h) }
+  },
+  onStreamDone: (cb: (data: { gameState: unknown }) => void) => {
+    const h = (_e: Electron.IpcRendererEvent, data: { gameState: unknown }) => cb(data)
+    ipcRenderer.on('api:done', h)
+    return () => { ipcRenderer.removeListener('api:done', h) }
+  },
+  onStreamError: (cb: (msg: string) => void) => {
+    const h = (_e: Electron.IpcRendererEvent, msg: string) => cb(msg)
+    ipcRenderer.on('api:error', h)
+    return () => { ipcRenderer.removeListener('api:error', h) }
+  }
 })

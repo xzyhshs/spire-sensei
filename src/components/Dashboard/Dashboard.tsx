@@ -27,7 +27,7 @@ function HpBar({ hp }: { hp: string }) {
       <div style={{
         display: 'flex', justifyContent: 'space-between', marginBottom: '4px', fontSize: '13px'
       }}>
-        <span style={{ color: 'var(--text-secondary)' }}>HP</span>
+        <span style={{ color: 'var(--text-secondary)' }}>生命值</span>
         <span style={{
           color: isLow ? 'var(--hp-red-glow)' : 'var(--text-primary)',
           fontWeight: 600,
@@ -118,18 +118,18 @@ export function Dashboard({ gameState, currentPath, savedGames, loading, onCreat
         }}>
           <div style={{ fontSize: '48px', marginBottom: '16px', opacity: 0.3 }}>🃏</div>
           <p style={{ color: 'var(--text-muted)', fontSize: '14px' }}>
-            Select or create a game above to begin
+            选择或创建游戏开始
           </p>
         </div>
       ) : (
       <>
       {/* Status Panel */}
       <div className="panel-card gold-border" style={{ padding: '16px', marginBottom: '16px' }}>
-        <div className="section-title">Status</div>
-        <StatRow label="Character" value={gameState.character} accent />
-        <StatRow label="Floor" value={gameState.floor} />
-        <StatRow label="Gold" value={gameState.gold} />
-        <StatRow label="Act" value={gameState.act} />
+        <div className="section-title">状态</div>
+        <StatRow label="角色" value={gameState.character} accent />
+        <StatRow label="层数" value={gameState.floor} />
+        <StatRow label="金币" value={gameState.gold} />
+        <StatRow label="幕" value={gameState.act} />
         <HpBar hp={gameState.hp} />
       </div>
 

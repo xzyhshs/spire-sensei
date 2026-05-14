@@ -2,7 +2,7 @@ import { app, BrowserWindow, ipcMain } from 'electron'
 import path from 'path'
 import fs from 'fs'
 import { createGame, listGames, readGame, writeGame } from './lib/game-manager'
-import { sendMessage, PERSONAS } from './lib/api-client'
+import { sendMessage, sendMessageStream, PERSONAS } from './lib/api-client'
 import type { GameState } from '../src/types'
 
 let mainWindow: BrowserWindow | null = null
@@ -121,6 +121,58 @@ function registerIpcHandlers() {
       }
       return JSON.stringify({ reply: `API 请求失败：${msg}`, gameState: null })
     }
+  })
+
+  // API: send message (streaming)
+  ipcMain.handle('api:sendMessageStream', async (_event, opts: {
+    text: string
+    imageBase64?: string
+    config?: Record<string, unknown>
+  }) => {
+    const diskConfig = loadConfig()
+    const mergedConfig = { ...diskConfig, ...opts.config }
+    const appConfig = {
+      vendorName: (mergedConfig.vendorName as string) || '',
+      apiKey: (mergedConfig.apiKey as string) || '',
+      baseUrl: (mergedConfig.baseUrl as string) || 'https://api.deepseek.com/v1',
+      model: (mergedConfig.model as string) || 'deepseek-v4-pro',
+      depth: (mergedConfig.depth as 'deep' | 'shallow') || 'deep',
+      persona: (mergedConfig.persona as string) || 'default',
+      customPersonaPrompt: (mergedConfig.customPersonaPrompt as string) || ''
+    }
+
+    if (!appConfig.apiKey) {
+      mainWindow?.webContents.send('api:error', '请先在设置中配置 API Key。')
+      return
+    }
+
+    const personaId = appConfig.persona
+    const persona = PERSONAS.find(p => p.id === personaId) || PERSONAS[0]
+
+    const games = listGames(gamesDir)
+    const activeGame = games.length > 0 ? games[0] : null
+    const gameState = activeGame ? readGame(activeGame.path) : null
+
+    await sendMessageStream({
+      text: opts.text,
+      imageBase64: opts.imageBase64,
+      gameFilePath: activeGame?.path || null,
+      config: appConfig,
+      persona,
+      gameState
+    }, {
+      onChunk(text) {
+        mainWindow?.webContents.send('api:chunk', text)
+      },
+      onDone() {
+        const updated = (activeGame && gameState) ? readGame(activeGame.path) : null
+        mainWindow?.webContents.send('api:done', { gameState: updated })
+      },
+      onError(err) {
+        const msg = err.message || '未知错误'
+        mainWindow?.webContents.send('api:error', `API 请求失败：${msg}`)
+      }
+    })
   })
 }
 

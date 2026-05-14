@@ -1,6 +1,7 @@
 import { useState } from 'react'
 
 const CHARACTERS = ['铁甲战士', '静默猎手', '故障机器人', '观者']
+const PAGE_SIZE = 5
 
 interface SavedGame {
   path: string
@@ -16,8 +17,18 @@ interface Props {
   onSwitchGame: (path: string) => void
 }
 
+function getFileName(p: string) {
+  return p.replace(/\\/g, '/').split('/').pop()?.replace('.md', '') || p
+}
+
 export function GameSelector({ savedGames, currentPath, loading, onCreateGame, onSwitchGame }: Props) {
   const [showNewGame, setShowNewGame] = useState(false)
+  const [expanded, setExpanded] = useState(false)
+  const [page, setPage] = useState(0)
+
+  const currentGame = savedGames.find(g => g.path === currentPath)
+  const totalPages = Math.ceil(savedGames.length / PAGE_SIZE)
+  const pageGames = savedGames.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE)
 
   return (
     <div style={{ padding: '16px' }}>
@@ -34,7 +45,7 @@ export function GameSelector({ savedGames, currentPath, loading, onCreateGame, o
       >
         <div>
           <div style={{ fontSize: '10px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-            Active Game
+            当前存档
           </div>
           <div style={{
             fontSize: '14px',
@@ -42,7 +53,7 @@ export function GameSelector({ savedGames, currentPath, loading, onCreateGame, o
             fontFamily: currentPath ? 'var(--font-display)' : 'inherit',
             marginTop: '2px'
           }}>
-            {currentPath ? currentPath.split('/').pop()?.replace('.md', '') : '未选择'}
+            {currentPath ? getFileName(currentPath) : '未选择'}
           </div>
         </div>
         <button
@@ -51,7 +62,7 @@ export function GameSelector({ savedGames, currentPath, loading, onCreateGame, o
           onClick={() => setShowNewGame(!showNewGame)}
           disabled={loading}
         >
-          ✦ New Game
+          ✦ 新游戏
         </button>
       </div>
 
@@ -59,7 +70,7 @@ export function GameSelector({ savedGames, currentPath, loading, onCreateGame, o
       {showNewGame && (
         <div className="panel-card" style={{ padding: '12px', marginBottom: '12px' }}>
           <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-            Select Character
+            选择角色
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
             {CHARACTERS.map(char => (
@@ -97,50 +108,113 @@ export function GameSelector({ savedGames, currentPath, loading, onCreateGame, o
         </div>
       )}
 
-      {/* Saved games list */}
+      {/* Saved games */}
       {savedGames.length > 0 && (
         <div className="panel-card" style={{ padding: '12px' }}>
-          <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-            Saved Games
+          <div
+            onClick={() => { setExpanded(!expanded); setPage(0) }}
+            style={{
+              display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+              cursor: 'pointer', userSelect: 'none',
+              marginBottom: expanded ? '8px' : '0'
+            }}
+          >
+            <span style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+              存档管理 ({savedGames.length})
+            </span>
+            <span style={{ color: 'var(--text-muted)', fontSize: '14px' }}>
+              {expanded ? '▲' : '▼'}
+            </span>
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-            {savedGames.map(game => (
-              <button
-                key={game.path}
-                onClick={() => onSwitchGame(game.path)}
-                disabled={game.path === currentPath}
-                style={{
-                  width: '100%',
-                  padding: '6px 12px',
-                  border: game.path === currentPath ? '1px solid var(--gold-dim)' : '1px solid transparent',
-                  borderRadius: 'var(--radius-sm)',
-                  background: game.path === currentPath ? 'rgba(201,169,110,0.06)' : 'transparent',
-                  color: game.path === currentPath ? 'var(--gold)' : 'var(--text-secondary)',
-                  cursor: game.path === currentPath ? 'default' : 'pointer',
-                  fontSize: '12px',
-                  textAlign: 'left',
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  transition: 'all var(--transition-fast)'
-                }}
-                onMouseEnter={(e) => {
-                  if (game.path !== currentPath) {
-                    e.currentTarget.style.background = 'var(--bg-elevated)'
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (game.path !== currentPath) {
-                    e.currentTarget.style.background = 'transparent'
-                  }
-                }}
-              >
-                <span>{game.character}</span>
-                <span style={{ color: 'var(--text-muted)', fontSize: '10px' }}>
-                  {new Date(game.updated).toLocaleDateString('zh-CN')}
-                </span>
-              </button>
-            ))}
-          </div>
+
+          {/* Collapsed: show only current game */}
+          {!expanded && currentGame && (
+            <div style={{
+              padding: '6px 12px', fontSize: '12px',
+              color: 'var(--gold)', display: 'flex', justifyContent: 'space-between'
+            }}>
+              <span>{currentGame.character}</span>
+              <span style={{ color: 'var(--text-muted)', fontSize: '10px' }}>
+                {new Date(currentGame.updated).toLocaleDateString('zh-CN')}
+              </span>
+            </div>
+          )}
+
+          {/* Expanded: paginated list */}
+          {expanded && (
+            <>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                {pageGames.map(game => (
+                  <button
+                    key={game.path}
+                    onClick={() => onSwitchGame(game.path)}
+                    disabled={game.path === currentPath}
+                    style={{
+                      width: '100%',
+                      padding: '6px 12px',
+                      border: game.path === currentPath ? '1px solid var(--gold-dim)' : '1px solid transparent',
+                      borderRadius: 'var(--radius-sm)',
+                      background: game.path === currentPath ? 'rgba(201,169,110,0.06)' : 'transparent',
+                      color: game.path === currentPath ? 'var(--gold)' : 'var(--text-secondary)',
+                      cursor: game.path === currentPath ? 'default' : 'pointer',
+                      fontSize: '12px',
+                      textAlign: 'left',
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      transition: 'all var(--transition-fast)'
+                    }}
+                    onMouseEnter={(e) => {
+                      if (game.path !== currentPath) {
+                        e.currentTarget.style.background = 'var(--bg-elevated)'
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (game.path !== currentPath) {
+                        e.currentTarget.style.background = 'transparent'
+                      }
+                    }}
+                  >
+                    <span>{game.character}</span>
+                    <span style={{ color: 'var(--text-muted)', fontSize: '10px' }}>
+                      {new Date(game.updated).toLocaleDateString('zh-CN')}
+                    </span>
+                  </button>
+                ))}
+              </div>
+
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div style={{
+                  display: 'flex', justifyContent: 'center', alignItems: 'center',
+                  gap: '12px', marginTop: '8px', fontSize: '12px'
+                }}>
+                  <button
+                    onClick={() => setPage(p => Math.max(0, p - 1))}
+                    disabled={page === 0}
+                    style={{
+                      border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-sm)',
+                      background: 'var(--bg-input)', color: page === 0 ? 'var(--text-muted)' : 'var(--text-primary)',
+                      cursor: page === 0 ? 'default' : 'pointer', padding: '2px 8px', fontSize: '11px'
+                    }}
+                  >
+                    &lt;
+                  </button>
+                  <span style={{ color: 'var(--text-muted)' }}>{page + 1} / {totalPages}</span>
+                  <button
+                    onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))}
+                    disabled={page >= totalPages - 1}
+                    style={{
+                      border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-sm)',
+                      background: 'var(--bg-input)', color: page >= totalPages - 1 ? 'var(--text-muted)' : 'var(--text-primary)',
+                      cursor: page >= totalPages - 1 ? 'default' : 'pointer', padding: '2px 8px', fontSize: '11px'
+                    }}
+                  >
+                    &gt;
+                  </button>
+                </div>
+              )}
+            </>
+          )}
         </div>
       )}
     </div>
