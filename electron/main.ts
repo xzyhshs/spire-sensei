@@ -232,13 +232,20 @@ function registerIpcHandlers() {
 }
 
 function createWindow() {
-  const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '../package.json'), 'utf-8'))
+  let title = 'Spire Sensei'
+  try {
+    const pkgPath = path.join(__dirname, '../package.json')
+    const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf-8'))
+    title = `Spire Sensei v${pkg.version}`
+  } catch {
+    console.error('[main] Failed to read package.json for version title')
+  }
   mainWindow = new BrowserWindow({
     width: 1280,
     height: 800,
     minWidth: 960,
     minHeight: 600,
-    title: `Spire Sensei v${pkg.version}`,
+    title,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
