@@ -50,7 +50,7 @@ function HpBar({ hp, changed }: { hp: string; changed: boolean }) {
         display: 'flex', justifyContent: 'space-between', marginBottom: '4px', fontSize: '13px'
       }}>
         <span style={{ color: 'var(--text-secondary)' }}>生命值</span>
-        <span style={{
+        <span key={`${current}/${max}`} style={{
           color: isLow ? 'var(--hp-red-glow)' : 'var(--text-primary)',
           fontWeight: 600,
           fontFamily: 'var(--font-mono)',
@@ -86,7 +86,7 @@ function StatRow({ label, value, accent, changed }: { label: string; value: stri
       animation: changed ? 'dashHighlight 0.6s ease-out' : 'none'
     }}>
       <span style={{ color: 'var(--text-secondary)', fontSize: '13px' }}>{label}</span>
-      <span style={{
+      <span key={String(value)} style={{
         color: accent ? 'var(--gold)' : 'var(--text-primary)',
         fontSize: '13px', fontWeight: 600,
         fontFamily: accent ? 'var(--font-display)' : 'var(--font-body)',
@@ -156,6 +156,13 @@ export function Dashboard({ gameState, currentPath, savedGames, loading, onCreat
   const prev = prevRef.current
   prevRef.current = gameState
 
+  const epochRef = useRef<Map<string, number>>(new Map())
+  const getEpoch = (name: string, isNew: boolean): number => {
+    const cur = epochRef.current.get(name) ?? 0
+    if (isNew) epochRef.current.set(name, cur + 1)
+    return isNew ? cur + 1 : cur
+  }
+
   const changed = {
     floor: prev && gameState ? prev.floor !== gameState.floor : false,
     gold: prev && gameState ? prev.gold !== gameState.gold : false,
@@ -213,8 +220,8 @@ export function Dashboard({ gameState, currentPath, savedGames, loading, onCreat
         <div className="section-title">卡组 ({gameState.cards.reduce((s, c) => s + c.count, 0)})</div>
         <div className="gold-divider" />
         <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-          {gameState.cards.map((card, i) => (
-            <CardItem key={`${card.name}-${i}`} card={card} isNew={newCards.has(card.name)} />
+          {gameState.cards.map((card) => (
+            <CardItem key={`${card.name}-${getEpoch(card.name, newCards.has(card.name))}`} card={card} isNew={newCards.has(card.name)} />
           ))}
         </div>
       </div>
@@ -225,8 +232,8 @@ export function Dashboard({ gameState, currentPath, savedGames, loading, onCreat
           <div className="section-title">遗物 ({gameState.relics.length})</div>
           <div className="gold-divider" />
           <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-            {gameState.relics.map((relic, i) => (
-              <RelicItem key={i} name={relic} isNew={newRelics.has(relic)} />
+            {gameState.relics.map((relic) => (
+              <RelicItem key={`${relic}-${getEpoch(relic, newRelics.has(relic))}`} name={relic} isNew={newRelics.has(relic)} />
             ))}
           </div>
         </div>
@@ -238,8 +245,8 @@ export function Dashboard({ gameState, currentPath, savedGames, loading, onCreat
           <div className="section-title">药水 ({gameState.potions.length})</div>
           <div className="gold-divider" />
           <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-            {gameState.potions.map((p, i) => (
-              <PotionBadge key={i} name={p} isNew={newPotions.has(p)} />
+            {gameState.potions.map((p) => (
+              <PotionBadge key={`${p}-${getEpoch(p, newPotions.has(p))}`} name={p} isNew={newPotions.has(p)} />
             ))}
           </div>
         </div>
