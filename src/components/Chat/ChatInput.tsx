@@ -169,7 +169,7 @@ export function ChatInput({ onSend, disabled }: Props) {
           value={text}
           onChange={(e) => setText(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="Describe or paste a screenshot (Ctrl+V)..."
+          placeholder="描述情况或粘贴截图 (Ctrl+V)..."
           rows={1}
           style={{
             flex: 1,
@@ -205,7 +205,7 @@ export function ChatInput({ onSend, disabled }: Props) {
             padding: '0 16px'
           }}
         >
-          Send
+          发送
         </button>
       </div>
 
@@ -216,7 +216,7 @@ export function ChatInput({ onSend, disabled }: Props) {
         color: 'var(--text-muted)',
         textAlign: 'center'
       }}>
-        Ctrl+V to paste screenshot · Drag & drop images · Enter to send · Shift+Enter for newline
+        Ctrl+V 粘贴截图 · 拖放图片 · Enter 发送 · Shift+Enter 换行
       </div>
     </div>
   )

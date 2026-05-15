@@ -41,7 +41,7 @@ export function ChatPanel({ messages, sending, config, onConfigChange, onOpenSet
           color: 'var(--text-secondary)',
           letterSpacing: '0.04em'
         }}>
-          Conversation
+          对话
         </div>
         <ChatToolbar config={config} onConfigChange={onConfigChange} onOpenSettings={onOpenSettings} />
       </header>
@@ -57,7 +57,7 @@ export function ChatPanel({ messages, sending, config, onConfigChange, onOpenSet
             <p style={{
               color: 'var(--text-muted)', fontSize: '14px', maxWidth: '320px', lineHeight: 1.6
             }}>
-              Start a new game, then send a screenshot or describe your situation to get guidance.
+              创建游戏后，发送截图或描述当前状况获取指导
             </p>
           </div>
         ) : (
