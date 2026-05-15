@@ -5,13 +5,30 @@ interface Props {
   disabled?: boolean
 }
 
+const MODES = [
+  { key: 'cards', label: '更新卡组' },
+  { key: 'relics', label: '更新遗物' },
+  { key: 'potions', label: '更新药水' },
+  { key: 'stats', label: '更新状态' }
+]
+
 export function ChatInput({ onSend, disabled }: Props) {
   const [text, setText] = useState('')
   const [image, setImage] = useState<string | null>(null)
+  const [activeModes, setActiveModes] = useState<Set<string>>(new Set())
   const fileInputRef = useRef<HTMLInputElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   const canSend = text.trim() || image
+
+  const toggleMode = (key: string) => {
+    setActiveModes(prev => {
+      const next = new Set(prev)
+      if (next.has(key)) next.delete(key)
+      else next.add(key)
+      return next
+    })
+  }
 
   const handlePaste = useCallback((e: React.ClipboardEvent) => {
     const items = e.clipboardData.items
@@ -48,9 +65,16 @@ export function ChatInput({ onSend, disabled }: Props) {
     e.dataTransfer.dropEffect = 'copy'
   }, [])
 
+  const activeLabels = MODES.filter(m => activeModes.has(m.key)).map(m => m.label)
+
   const handleSend = () => {
     if (!canSend) return
-    onSend(text, image || undefined)
+    let finalText = text
+    if (activeLabels.length > 0) {
+      const modeHint = `【${activeLabels.join('、')}】请识别内容并调用 update_game_state 更新对应数据`
+      finalText = text ? `${modeHint}：${text}` : modeHint
+    }
+    onSend(finalText, image || undefined)
     setText('')
     setImage(null)
   }
@@ -117,6 +141,38 @@ export function ChatInput({ onSend, disabled }: Props) {
           </button>
         </div>
       )}
+
+      {/* Quick mode toggle chips */}
+      <div style={{
+        display: 'flex',
+        gap: '6px',
+        marginBottom: '8px',
+        flexWrap: 'wrap'
+      }}>
+        {MODES.map(mode => {
+          const active = activeModes.has(mode.key)
+          return (
+            <button
+              key={mode.key}
+              onClick={() => toggleMode(mode.key)}
+              disabled={disabled}
+              style={{
+                padding: '3px 10px',
+                fontSize: '11px',
+                borderRadius: '12px',
+                border: active ? '1px solid var(--gold)' : '1px solid var(--border-subtle)',
+                background: active ? 'rgba(201,169,110,0.12)' : 'var(--bg-input)',
+                color: active ? 'var(--gold)' : 'var(--text-muted)',
+                cursor: disabled ? 'default' : 'pointer',
+                transition: 'all var(--transition-fast)',
+                fontWeight: active ? 600 : 400
+              }}
+            >
+              {mode.label}
+            </button>
+          )
+        })}
+      </div>
 
       {/* Input row */}
       <div style={{
