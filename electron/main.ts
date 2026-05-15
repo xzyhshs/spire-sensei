@@ -232,12 +232,13 @@ function registerIpcHandlers() {
 }
 
 function createWindow() {
+  const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '../package.json'), 'utf-8'))
   mainWindow = new BrowserWindow({
     width: 1280,
     height: 800,
     minWidth: 960,
     minHeight: 600,
-    title: 'Spire Sensei',
+    title: `Spire Sensei v${pkg.version}`,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
