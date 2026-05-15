@@ -11,14 +11,18 @@ interface Props {
   onConfigChange: (config: Partial<AppConfig>) => void
   onOpenSettings: () => void
   onSendMessage: (text: string, imageBase64?: string[]) => void
+  onCancelMessage: () => void
 }
 
-export function ChatPanel({ messages, sending, config, onConfigChange, onOpenSettings, onSendMessage }: Props) {
+export function ChatPanel({ messages, sending, config, onConfigChange, onOpenSettings, onSendMessage, onCancelMessage }: Props) {
   const messageListRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    if (messageListRef.current) {
-      messageListRef.current.scrollTop = messageListRef.current.scrollHeight
+    const el = messageListRef.current
+    if (!el) return
+    const isNearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 80
+    if (isNearBottom) {
+      el.scrollTop = el.scrollHeight
     }
   }, [messages])
 
@@ -102,6 +106,7 @@ export function ChatPanel({ messages, sending, config, onConfigChange, onOpenSet
       {/* Input */}
       <ChatInput
         onSend={onSendMessage}
+        onCancel={onCancelMessage}
         disabled={sending}
       />
     </>

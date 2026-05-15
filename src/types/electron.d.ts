@@ -12,6 +12,7 @@ export interface ElectronAPI {
   onStreamChunk: (cb: (text: string) => void) => () => void
   onStreamDone: (cb: (data: { gameState: GameState | null }) => void) => () => void
   onStreamError: (cb: (msg: string) => void) => () => void
+  cancelMessage: () => Promise<void>
 }
 
 declare global {

@@ -27,7 +27,7 @@ const STATE_UPDATE_TOOL = {
   type: 'function',
   function: {
     name: 'update_game_state',
-    description: '更新杀戮尖塔游戏状态。当玩家要求修改卡组、遗物、药水、生命值、金币、层数、幕数或当前选项时调用此函数。玩家用口语化中文表达也要识别（如"删一张打击""掉了20血""没有遗物了""最大血量100"）。只传需要变更的字段，不传未变更的字段。',
+    description: '【仅限用户明确要求时调用】更新杀戮尖塔游戏状态。调用条件：1) 用户消息带【更新卡组/遗物/药水/状态】标签，或 2) 用户明确说"更新XX"。严禁在普通对话中擅自调用。只传需要变更的字段。',
     parameters: {
       type: 'object',
       properties: {
@@ -72,7 +72,8 @@ function buildMessages(opts: SendMessageOpts): BuildMessagesResult {
     gameState: opts.gameState,
     persona,
     depth: opts.config.depth,
-    customPersonaPrompt: opts.config.customPersonaPrompt
+    customPersonaPrompt: opts.config.customPersonaPrompt,
+    model: opts.config.model
   })
 
   const messages: Array<{
@@ -217,12 +218,13 @@ export interface StreamCallbacks {
 
 export async function sendMessageStream(
   opts: SendMessageOpts,
-  callbacks: StreamCallbacks
+  callbacks: StreamCallbacks,
+  externalController?: AbortController
 ): Promise<void> {
   const { messages, apiUrl, model } = buildMessages(opts)
 
-  const controller = new AbortController()
-  const timeout = setTimeout(() => controller.abort(), 180000)
+  const controller = externalController || new AbortController()
+  const timeout = externalController ? null : setTimeout(() => controller.abort(), 180000)
 
   try {
     const response = await fetch(apiUrl, {
@@ -319,6 +321,6 @@ export async function sendMessageStream(
   } catch (err) {
     callbacks.onError(err instanceof Error ? err : new Error(String(err)))
   } finally {
-    clearTimeout(timeout)
+    if (timeout) clearTimeout(timeout)
   }
 }

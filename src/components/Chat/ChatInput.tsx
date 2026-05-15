@@ -2,6 +2,7 @@ import { useState, useRef, useCallback } from 'react'
 
 interface Props {
   onSend: (text: string, imageBase64?: string[]) => void
+  onCancel: () => void
   disabled?: boolean
 }
 
@@ -12,7 +13,7 @@ const MODES = [
   { key: 'stats', label: '更新状态' }
 ]
 
-export function ChatInput({ onSend, disabled }: Props) {
+export function ChatInput({ onSend, onCancel, disabled }: Props) {
   const [text, setText] = useState('')
   const [images, setImages] = useState<string[]>([])
   const [activeModes, setActiveModes] = useState<Set<string>>(new Set())
@@ -79,6 +80,7 @@ export function ChatInput({ onSend, disabled }: Props) {
     onSend(finalText, images.length > 0 ? images : undefined)
     setText('')
     setImages([])
+    setActiveModes(new Set())
   }
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -273,6 +275,31 @@ export function ChatInput({ onSend, disabled }: Props) {
         >
           发送
         </button>
+
+        {/* Cancel button — only visible when sending */}
+        {disabled && (
+          <button
+            onClick={onCancel}
+            style={{
+              flexShrink: 0,
+              height: '36px',
+              width: '36px',
+              borderRadius: 'var(--radius-md)',
+              border: '1px solid #c0392b',
+              background: 'rgba(192,57,43,0.12)',
+              color: '#e74c3c',
+              cursor: 'pointer',
+              fontSize: '16px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              transition: 'all var(--transition-fast)'
+            }}
+            title="终止回复"
+          >
+            ⏹
+          </button>
+        )}
       </div>
 
       {/* Hint */}

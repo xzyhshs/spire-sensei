@@ -8,6 +8,7 @@ import type { GameState } from '../src/types'
 let mainWindow: BrowserWindow | null = null
 let gamesDir: string
 let configPath: string
+let currentAbortController: AbortController | null = null
 
 function initPaths() {
   const userDataPath = app.getPath('userData')
@@ -153,6 +154,11 @@ function registerIpcHandlers() {
     const activeGame = games.length > 0 ? games[0] : null
     const gameState = activeGame ? readGame(activeGame.path) : null
 
+    // Cancel any previous request, create new AbortController
+    currentAbortController?.abort()
+    const abortController = new AbortController()
+    currentAbortController = abortController
+
     await sendMessageStream({
       text: opts.text,
       imageBase64: opts.imageBase64,
@@ -165,14 +171,22 @@ function registerIpcHandlers() {
         mainWindow?.webContents.send('api:chunk', text)
       },
       onDone() {
+        currentAbortController = null
         const updated = (activeGame && gameState) ? readGame(activeGame.path) : null
         mainWindow?.webContents.send('api:done', { gameState: updated })
       },
       onError(err) {
+        currentAbortController = null
         const msg = err.message || '未知错误'
         mainWindow?.webContents.send('api:error', `API 请求失败：${msg}`)
       }
-    })
+    }, abortController)
+  })
+
+  // API: cancel current request
+  ipcMain.handle('api:cancel', async () => {
+    currentAbortController?.abort()
+    currentAbortController = null
   })
 }
 

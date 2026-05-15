@@ -80,5 +80,10 @@ export function useChat() {
     }
   }, [])
 
-  return { messages, sending, addMessage, sendMessage }
+  const cancelMessage = useCallback(async () => {
+    await window.electronAPI.cancelMessage()
+    setSending(false)
+  }, [])
+
+  return { messages, sending, addMessage, sendMessage, cancelMessage }
 }

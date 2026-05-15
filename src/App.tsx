@@ -26,7 +26,7 @@ function App() {
     updateGameState
   } = useGameState()
 
-  const { messages, sending, sendMessage } = useChat()
+  const { messages, sending, sendMessage, cancelMessage } = useChat()
   const [config, setConfig] = useState<AppConfig>(DEFAULT_CONFIG)
   const [configLoaded, setConfigLoaded] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
@@ -67,6 +67,7 @@ function App() {
         onOpenSettings={() => setShowSettings(true)}
         messages={messages}
         onSendMessage={handleSendMessage}
+        onCancelMessage={cancelMessage}
       />
 
       {showSettings && (

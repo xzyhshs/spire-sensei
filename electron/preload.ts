@@ -25,5 +25,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
     const h = (_e: Electron.IpcRendererEvent, msg: string) => cb(msg)
     ipcRenderer.on('api:error', h)
     return () => { ipcRenderer.removeListener('api:error', h) }
-  }
+  },
+  cancelMessage: () => ipcRenderer.invoke('api:cancel')
 })
