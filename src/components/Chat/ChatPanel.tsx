@@ -8,20 +8,26 @@ interface Props {
   messages: ChatMessage[]
   sending: boolean
   config: AppConfig
+  currentPath: string | null
   onConfigChange: (config: Partial<AppConfig>) => void
   onOpenSettings: () => void
   onSendMessage: (text: string, imageBase64?: string[]) => void
   onCancelMessage: () => void
 }
 
-export function ChatPanel({ messages, sending, config, onConfigChange, onOpenSettings, onSendMessage, onCancelMessage }: Props) {
+export function ChatPanel({ messages, sending, config, currentPath, onConfigChange, onOpenSettings, onSendMessage, onCancelMessage }: Props) {
   const messageListRef = useRef<HTMLDivElement>(null)
+  const prevLenRef = useRef(messages.length)
 
   useEffect(() => {
     const el = messageListRef.current
     if (!el) return
+    const justSent = messages.length > prevLenRef.current
+      && messages[messages.length - 1]?.role === 'user'
+    prevLenRef.current = messages.length
+
     const isNearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 80
-    if (isNearBottom) {
+    if (justSent || isNearBottom) {
       el.scrollTop = el.scrollHeight
     }
   }, [messages])
@@ -108,6 +114,7 @@ export function ChatPanel({ messages, sending, config, onConfigChange, onOpenSet
         onSend={onSendMessage}
         onCancel={onCancelMessage}
         disabled={sending}
+        hasGame={currentPath !== null}
       />
     </>
   )

@@ -68,11 +68,12 @@ function registerIpcHandlers() {
     saveConfig(config)
   })
 
-  // API: send message
+  // API: send message (legacy non-streaming)
   ipcMain.handle('api:sendMessage', async (_event, opts: {
     text: string
     imageBase64?: string[]
     config?: Record<string, unknown>
+    gamePath?: string | null
   }) => {
     const diskConfig = loadConfig()
     const mergedConfig = { ...diskConfig, ...opts.config }
@@ -93,24 +94,24 @@ function registerIpcHandlers() {
     const personaId = appConfig.persona
     const persona = PERSONAS.find(p => p.id === personaId) || PERSONAS[0]
 
-    // Get current game state if available
+    // Use frontend-provided gamePath, fallback to most recently updated game
     const games = listGames(gamesDir)
-    const activeGame = games.length > 0 ? games[0] : null
-    const gameState = activeGame ? readGame(activeGame.path) : null
+    const gamePath = opts.gamePath || (games.length > 0 ? games[0].path : null)
+    const gameState = gamePath ? readGame(gamePath) : null
 
     try {
       const { reply } = await sendMessage({
         text: opts.text,
         imageBase64: opts.imageBase64,
-        gameFilePath: activeGame?.path || null,
+        gameFilePath: gamePath,
         config: appConfig,
         persona,
         gameState
       })
 
       // Reload game state if it was updated
-      if (activeGame && gameState) {
-        const updated = readGame(activeGame.path)
+      if (gamePath && gameState) {
+        const updated = readGame(gamePath)
         return JSON.stringify({ reply, gameState: updated })
       }
 
@@ -129,6 +130,7 @@ function registerIpcHandlers() {
     text: string
     imageBase64?: string[]
     config?: Record<string, unknown>
+    gamePath?: string | null
   }) => {
     const diskConfig = loadConfig()
     const mergedConfig = { ...diskConfig, ...opts.config }
@@ -150,9 +152,10 @@ function registerIpcHandlers() {
     const personaId = appConfig.persona
     const persona = PERSONAS.find(p => p.id === personaId) || PERSONAS[0]
 
+    // Use frontend-provided gamePath, fallback to most recently updated game
     const games = listGames(gamesDir)
-    const activeGame = games.length > 0 ? games[0] : null
-    const gameState = activeGame ? readGame(activeGame.path) : null
+    const gamePath = opts.gamePath || (games.length > 0 ? games[0].path : null)
+    const gameState = gamePath ? readGame(gamePath) : null
 
     // Cancel any previous request, create new AbortController
     currentAbortController?.abort()
@@ -162,7 +165,7 @@ function registerIpcHandlers() {
     await sendMessageStream({
       text: opts.text,
       imageBase64: opts.imageBase64,
-      gameFilePath: activeGame?.path || null,
+      gameFilePath: gamePath,
       config: appConfig,
       persona,
       gameState
@@ -172,7 +175,7 @@ function registerIpcHandlers() {
       },
       onDone() {
         currentAbortController = null
-        const updated = (activeGame && gameState) ? readGame(activeGame.path) : null
+        const updated = (gamePath && gameState) ? readGame(gamePath) : null
         mainWindow?.webContents.send('api:done', { gameState: updated })
       },
       onError(err) {
@@ -181,6 +184,12 @@ function registerIpcHandlers() {
         mainWindow?.webContents.send('api:error', `API 请求失败：${msg}`)
       }
     }, abortController)
+  })
+
+  // API: cancel streaming
+  ipcMain.handle('api:cancel', async () => {
+    currentAbortController?.abort()
+    return true
   })
 
   // File: delete game

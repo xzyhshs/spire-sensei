@@ -13,6 +13,7 @@ interface SendOpts {
   imageBase64?: string[]
   config: AppConfig
   gameState: GameState | null
+  gamePath?: string | null
 }
 
 export function useChat() {
@@ -71,7 +72,8 @@ export function useChat() {
         window.electronAPI.sendMessageStream({
           text: opts.text,
           imageBase64: opts.imageBase64,
-          config: opts.config
+          config: opts.config,
+          gamePath: opts.gamePath
         })
       })
 

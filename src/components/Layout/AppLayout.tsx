@@ -99,6 +99,7 @@ export function AppLayout({ gameState, currentPath, savedGames, loading, config,
           messages={messages}
           sending={sending}
           config={config}
+          currentPath={currentPath}
           onConfigChange={onConfigChange}
           onOpenSettings={onOpenSettings}
           onSendMessage={onSendMessage}

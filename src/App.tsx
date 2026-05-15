@@ -48,7 +48,7 @@ function App() {
   }
 
   const handleSendMessage = async (text: string, imageBase64?: string[]) => {
-    const updated = await sendMessage({ text, imageBase64: imageBase64, config, gameState })
+    const updated = await sendMessage({ text, imageBase64: imageBase64, config, gameState, gamePath: currentPath })
     if (updated) updateGameState(updated)
     // Save chat after each message round completes
     if (currentPath) await saveChatHistory(currentPath)

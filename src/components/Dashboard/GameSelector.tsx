@@ -18,13 +18,13 @@ interface Props {
   onDeleteGame: (path: string) => void
 }
 
-function getFileName(p: string) {
-  return p.replace(/\\/g, '/').split('/').pop()?.replace('.md', '') || p
+function fmtTime(iso: string) {
+  return new Date(iso).toLocaleString('zh-CN', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })
 }
 
 export function GameSelector({ savedGames, currentPath, loading, onCreateGame, onSwitchGame, onDeleteGame }: Props) {
   const [showNewGame, setShowNewGame] = useState(false)
-  const [expanded, setExpanded] = useState(false)
+  const [expanded, setExpanded] = useState(!currentPath)
   const [page, setPage] = useState(0)
 
   const currentGame = savedGames.find(g => g.path === currentPath)
@@ -50,11 +50,13 @@ export function GameSelector({ savedGames, currentPath, loading, onCreateGame, o
           </div>
           <div style={{
             fontSize: '14px',
-            color: currentPath ? 'var(--gold)' : 'var(--text-muted)',
+            color: currentPath ? 'var(--gold)' : '#e67e22',
             fontFamily: currentPath ? 'var(--font-display)' : 'inherit',
             marginTop: '2px'
           }}>
-            {currentPath ? getFileName(currentPath) : '未选择'}
+            {currentGame
+              ? `${currentGame.character}  ${fmtTime(currentGame.updated)}`
+              : '请创建或选择游戏开始'}
           </div>
         </div>
         <button

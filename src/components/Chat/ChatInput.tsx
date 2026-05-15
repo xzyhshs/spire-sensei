@@ -4,6 +4,7 @@ interface Props {
   onSend: (text: string, imageBase64?: string[]) => void
   onCancel: () => void
   disabled?: boolean
+  hasGame?: boolean
 }
 
 const MODES = [
@@ -13,7 +14,7 @@ const MODES = [
   { key: 'stats', label: '更新状态' }
 ]
 
-export function ChatInput({ onSend, onCancel, disabled }: Props) {
+export function ChatInput({ onSend, onCancel, disabled, hasGame }: Props) {
   const [text, setText] = useState('')
   const [images, setImages] = useState<string[]>([])
   const [activeModes, setActiveModes] = useState<Set<string>>(new Set())
@@ -21,6 +22,7 @@ export function ChatInput({ onSend, onCancel, disabled }: Props) {
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   const canSend = text.trim() || images.length > 0
+  const inputDisabled = !hasGame
 
   const addImage = (base64: string) => setImages(prev => [...prev, base64])
 
@@ -71,7 +73,7 @@ export function ChatInput({ onSend, onCancel, disabled }: Props) {
   const activeLabels = MODES.filter(m => activeModes.has(m.key)).map(m => m.label)
 
   const handleSend = () => {
-    if (!canSend) return
+    if (!canSend || inputDisabled) return
     let finalText = text
     if (activeLabels.length > 0) {
       const modeHint = `【${activeLabels.join('、')}】请识别内容并调用 update_game_state 更新对应数据`
@@ -167,7 +169,7 @@ export function ChatInput({ onSend, onCancel, disabled }: Props) {
             <button
               key={mode.key}
               onClick={() => toggleMode(mode.key)}
-              disabled={disabled}
+              disabled={disabled || inputDisabled}
               style={{
                 padding: '3px 10px',
                 fontSize: '11px',
@@ -175,7 +177,7 @@ export function ChatInput({ onSend, onCancel, disabled }: Props) {
                 border: active ? '1px solid var(--gold)' : '1px solid var(--border-subtle)',
                 background: active ? 'rgba(201,169,110,0.12)' : 'var(--bg-input)',
                 color: active ? 'var(--gold)' : 'var(--text-muted)',
-                cursor: disabled ? 'default' : 'pointer',
+                cursor: disabled || inputDisabled ? 'default' : 'pointer',
                 transition: 'all var(--transition-fast)',
                 fontWeight: active ? 600 : 400
               }}
@@ -195,6 +197,7 @@ export function ChatInput({ onSend, onCancel, disabled }: Props) {
         {/* Paste button */}
         <button
           onClick={() => fileInputRef.current?.click()}
+          disabled={inputDisabled}
           title="Paste screenshot (or Ctrl+V)"
           style={{
             width: '36px',
@@ -203,7 +206,7 @@ export function ChatInput({ onSend, onCancel, disabled }: Props) {
             border: '1px solid var(--border-subtle)',
             background: 'var(--bg-input)',
             color: 'var(--text-muted)',
-            cursor: 'pointer',
+            cursor: inputDisabled ? 'default' : 'pointer',
             fontSize: '16px',
             display: 'flex',
             alignItems: 'center',
@@ -218,6 +221,7 @@ export function ChatInput({ onSend, onCancel, disabled }: Props) {
           ref={fileInputRef}
           type="file"
           accept="image/*"
+          disabled={inputDisabled}
           style={{ display: 'none' }}
           onChange={(e) => {
             const file = e.target.files?.[0]
@@ -234,10 +238,11 @@ export function ChatInput({ onSend, onCancel, disabled }: Props) {
         {/* Text input */}
         <textarea
           ref={textareaRef}
-          value={text}
+          value={inputDisabled ? '' : text}
           onChange={(e) => setText(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="描述情况或粘贴截图 (Ctrl+V)..."
+          disabled={inputDisabled}
+          placeholder={inputDisabled ? '请先在左侧选择或创建游戏' : '描述情况或粘贴截图 (Ctrl+V)...'}
           rows={1}
           style={{
             flex: 1,
@@ -251,7 +256,8 @@ export function ChatInput({ onSend, onCancel, disabled }: Props) {
             resize: 'none',
             outline: 'none',
             maxHeight: '120px',
-            transition: 'border-color var(--transition-fast)'
+            transition: 'border-color var(--transition-fast)',
+            opacity: inputDisabled ? 0.5 : 1
           }}
           onFocus={(e) => {
             e.currentTarget.style.borderColor = 'var(--gold-dim)'
@@ -264,10 +270,10 @@ export function ChatInput({ onSend, onCancel, disabled }: Props) {
         {/* Send button */}
         <button
           onClick={handleSend}
-          disabled={!canSend || disabled}
-          className={canSend && !disabled ? 'btn btn-primary' : 'btn'}
+          disabled={!canSend || disabled || inputDisabled}
+          className={canSend && !disabled && !inputDisabled ? 'btn btn-primary' : 'btn'}
           style={{
-            opacity: canSend && !disabled ? 1 : 0.4,
+            opacity: canSend && !disabled && !inputDisabled ? 1 : 0.4,
             flexShrink: 0,
             height: '36px',
             padding: '0 16px'
