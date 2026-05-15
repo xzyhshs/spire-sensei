@@ -18,6 +18,7 @@ interface Props {
   onGameStateChange: (state: GameState) => void
   onCreateGame: (character: string) => void
   onSwitchGame: (path: string) => void
+  onDeleteGame: (path: string) => void
   onConfigChange: (config: Partial<AppConfig>) => void
   onOpenSettings: () => void
   messages: ChatMessage[]
@@ -25,7 +26,7 @@ interface Props {
   onCancelMessage: () => void
 }
 
-export function AppLayout({ gameState, currentPath, savedGames, loading, config, sending, onGameStateChange, onCreateGame, onSwitchGame, onConfigChange, onOpenSettings, messages, onSendMessage, onCancelMessage }: Props) {
+export function AppLayout({ gameState, currentPath, savedGames, loading, config, sending, onGameStateChange, onCreateGame, onSwitchGame, onDeleteGame, onConfigChange, onOpenSettings, messages, onSendMessage, onCancelMessage }: Props) {
   return (
     <div style={{
       display: 'flex',
@@ -82,6 +83,7 @@ export function AppLayout({ gameState, currentPath, savedGames, loading, config,
             onGameStateChange={onGameStateChange}
             onCreateGame={onCreateGame}
             onSwitchGame={onSwitchGame}
+            onDeleteGame={onDeleteGame}
           />
         </div>
       </aside>

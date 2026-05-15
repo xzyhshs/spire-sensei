@@ -23,10 +23,11 @@ function App() {
     loading,
     createGame,
     switchGame,
-    updateGameState
+    updateGameState,
+    deleteGame
   } = useGameState()
 
-  const { messages, sending, sendMessage, cancelMessage } = useChat()
+  const { messages, sending, sendMessage, cancelMessage, saveChatHistory, loadChatHistory } = useChat()
   const [config, setConfig] = useState<AppConfig>(DEFAULT_CONFIG)
   const [configLoaded, setConfigLoaded] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
@@ -49,6 +50,18 @@ function App() {
   const handleSendMessage = async (text: string, imageBase64?: string[]) => {
     const updated = await sendMessage({ text, imageBase64: imageBase64, config, gameState })
     if (updated) updateGameState(updated)
+    // Save chat after each message round completes
+    if (currentPath) await saveChatHistory(currentPath)
+  }
+
+  const handleSwitchGame = async (path: string) => {
+    if (currentPath) await saveChatHistory(currentPath)
+    await switchGame(path)
+    await loadChatHistory(path)
+  }
+
+  const handleDeleteGame = async (path: string) => {
+    await deleteGame(path)
   }
 
   return (
@@ -62,7 +75,8 @@ function App() {
         sending={sending}
         onGameStateChange={updateGameState}
         onCreateGame={createGame}
-        onSwitchGame={switchGame}
+        onSwitchGame={handleSwitchGame}
+        onDeleteGame={handleDeleteGame}
         onConfigChange={handleConfigChange}
         onOpenSettings={() => setShowSettings(true)}
         messages={messages}

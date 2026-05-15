@@ -183,10 +183,42 @@ function registerIpcHandlers() {
     }, abortController)
   })
 
-  // API: cancel current request
-  ipcMain.handle('api:cancel', async () => {
-    currentAbortController?.abort()
-    currentAbortController = null
+  // File: delete game
+  ipcMain.handle('file:deleteGame', async (_event, filePath: string) => {
+    try {
+      if (fs.existsSync(filePath)) fs.unlinkSync(filePath)
+      const chatPath = filePath.replace(/\.md$/, '.chat.json')
+      if (fs.existsSync(chatPath)) fs.unlinkSync(chatPath)
+      return true
+    } catch (err) {
+      console.error('[main] deleteGame error:', err)
+      return false
+    }
+  })
+
+  // Chat: save history
+  ipcMain.handle('chat:save', async (_event, gamePath: string, messages: unknown[]) => {
+    try {
+      const chatPath = gamePath.replace(/\.md$/, '.chat.json')
+      fs.writeFileSync(chatPath, JSON.stringify({ messages }, null, 2), 'utf-8')
+      return true
+    } catch (err) {
+      console.error('[main] chat:save error:', err)
+      return false
+    }
+  })
+
+  // Chat: load history
+  ipcMain.handle('chat:load', async (_event, gamePath: string) => {
+    try {
+      const chatPath = gamePath.replace(/\.md$/, '.chat.json')
+      if (!fs.existsSync(chatPath)) return { messages: [] }
+      const raw = fs.readFileSync(chatPath, 'utf-8')
+      return JSON.parse(raw)
+    } catch (err) {
+      console.error('[main] chat:load error:', err)
+      return { messages: [] }
+    }
   })
 }
 

@@ -26,5 +26,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.on('api:error', h)
     return () => { ipcRenderer.removeListener('api:error', h) }
   },
-  cancelMessage: () => ipcRenderer.invoke('api:cancel')
+  cancelMessage: () => ipcRenderer.invoke('api:cancel'),
+  deleteGameFile: (path: string) => ipcRenderer.invoke('file:deleteGame', path),
+  saveChatHistory: (gamePath: string, messages: unknown[]) => ipcRenderer.invoke('chat:save', gamePath, messages),
+  loadChatHistory: (gamePath: string) => ipcRenderer.invoke('chat:load', gamePath)
 })

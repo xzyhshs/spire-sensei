@@ -13,6 +13,9 @@ export interface ElectronAPI {
   onStreamDone: (cb: (data: { gameState: GameState | null }) => void) => () => void
   onStreamError: (cb: (msg: string) => void) => () => void
   cancelMessage: () => Promise<void>
+  deleteGameFile: (path: string) => Promise<boolean>
+  saveChatHistory: (gamePath: string, messages: unknown[]) => Promise<boolean>
+  loadChatHistory: (gamePath: string) => Promise<{ messages: import('./index').ChatMessage[] }>
 }
 
 declare global {

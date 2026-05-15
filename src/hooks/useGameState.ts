@@ -53,6 +53,21 @@ export function useGameState() {
     setGameState(state)
   }, [])
 
+  const deleteGame = useCallback(async (path: string) => {
+    try {
+      const success = await ipc.deleteGameFile(path)
+      if (!success) return false
+      if (path === currentPath) {
+        setCurrentPath(null)
+        setGameState(null)
+      }
+      await refreshSavedGames()
+      return true
+    } catch {
+      return false
+    }
+  }, [currentPath, refreshSavedGames])
+
   return {
     gameState,
     currentPath,
@@ -61,6 +76,7 @@ export function useGameState() {
     refreshSavedGames,
     createGame,
     switchGame,
-    updateGameState
+    updateGameState,
+    deleteGame
   }
 }

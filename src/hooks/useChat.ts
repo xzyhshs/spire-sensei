@@ -1,5 +1,6 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useRef } from 'react'
 import type { ChatMessage, AppConfig, GameState } from '../types'
+import * as ipc from '../lib/ipc'
 
 const PERSONAS = [
   { id: 'default', name: '默认', description: '', preset: true }
@@ -17,6 +18,8 @@ interface SendOpts {
 export function useChat() {
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [sending, setSending] = useState(false)
+  const messagesRef = useRef<ChatMessage[]>([])
+  messagesRef.current = messages
 
   const addMessage = useCallback((msg: ChatMessage) => {
     setMessages(prev => [...prev, msg])
@@ -85,5 +88,15 @@ export function useChat() {
     setSending(false)
   }, [])
 
-  return { messages, sending, addMessage, sendMessage, cancelMessage }
+  // Persistence helpers — use ref so callers always get the latest messages
+  const saveChatHistory = useCallback(async (gamePath: string) => {
+    await ipc.saveChatHistory(gamePath, messagesRef.current)
+  }, [])
+
+  const loadChatHistory = useCallback(async (gamePath: string) => {
+    const msgs = await ipc.loadChatHistory(gamePath)
+    setMessages(msgs)
+  }, [])
+
+  return { messages, sending, addMessage, sendMessage, cancelMessage, setMessages, saveChatHistory, loadChatHistory }
 }

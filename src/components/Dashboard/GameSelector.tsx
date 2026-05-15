@@ -15,13 +15,14 @@ interface Props {
   loading: boolean
   onCreateGame: (character: string) => void
   onSwitchGame: (path: string) => void
+  onDeleteGame: (path: string) => void
 }
 
 function getFileName(p: string) {
   return p.replace(/\\/g, '/').split('/').pop()?.replace('.md', '') || p
 }
 
-export function GameSelector({ savedGames, currentPath, loading, onCreateGame, onSwitchGame }: Props) {
+export function GameSelector({ savedGames, currentPath, loading, onCreateGame, onSwitchGame, onDeleteGame }: Props) {
   const [showNewGame, setShowNewGame] = useState(false)
   const [expanded, setExpanded] = useState(false)
   const [page, setPage] = useState(0)
@@ -145,40 +146,84 @@ export function GameSelector({ savedGames, currentPath, loading, onCreateGame, o
             <>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
                 {pageGames.map(game => (
-                  <button
+                  <div
                     key={game.path}
-                    onClick={() => onSwitchGame(game.path)}
-                    disabled={game.path === currentPath}
                     style={{
-                      width: '100%',
-                      padding: '6px 12px',
-                      border: game.path === currentPath ? '1px solid var(--gold-dim)' : '1px solid transparent',
-                      borderRadius: 'var(--radius-sm)',
-                      background: game.path === currentPath ? 'rgba(201,169,110,0.06)' : 'transparent',
-                      color: game.path === currentPath ? 'var(--gold)' : 'var(--text-secondary)',
-                      cursor: game.path === currentPath ? 'default' : 'pointer',
-                      fontSize: '12px',
-                      textAlign: 'left',
                       display: 'flex',
-                      justifyContent: 'space-between',
-                      transition: 'all var(--transition-fast)'
-                    }}
-                    onMouseEnter={(e) => {
-                      if (game.path !== currentPath) {
-                        e.currentTarget.style.background = 'var(--bg-elevated)'
-                      }
-                    }}
-                    onMouseLeave={(e) => {
-                      if (game.path !== currentPath) {
-                        e.currentTarget.style.background = 'transparent'
-                      }
+                      alignItems: 'center',
+                      gap: '4px'
                     }}
                   >
-                    <span>{game.character}</span>
-                    <span style={{ color: 'var(--text-muted)', fontSize: '10px' }}>
-                      {new Date(game.updated).toLocaleString('zh-CN', { year: 'numeric', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
-                    </span>
-                  </button>
+                    <button
+                      onClick={() => onSwitchGame(game.path)}
+                      disabled={game.path === currentPath}
+                      style={{
+                        flex: 1,
+                        padding: '6px 12px',
+                        border: game.path === currentPath ? '1px solid var(--gold-dim)' : '1px solid transparent',
+                        borderRadius: 'var(--radius-sm)',
+                        background: game.path === currentPath ? 'rgba(201,169,110,0.06)' : 'transparent',
+                        color: game.path === currentPath ? 'var(--gold)' : 'var(--text-secondary)',
+                        cursor: game.path === currentPath ? 'default' : 'pointer',
+                        fontSize: '12px',
+                        textAlign: 'left',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        transition: 'all var(--transition-fast)'
+                      }}
+                      onMouseEnter={(e) => {
+                        if (game.path !== currentPath) {
+                          e.currentTarget.style.background = 'var(--bg-elevated)'
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (game.path !== currentPath) {
+                          e.currentTarget.style.background = 'transparent'
+                        }
+                      }}
+                    >
+                      <span>{game.character}</span>
+                      <span style={{ color: 'var(--text-muted)', fontSize: '10px' }}>
+                        {new Date(game.updated).toLocaleString('zh-CN', { year: 'numeric', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                      </span>
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        if (window.confirm(`确定删除存档 "${game.character}" 吗？此操作不可撤销。`)) {
+                          onDeleteGame(game.path)
+                        }
+                      }}
+                      title="删除存档"
+                      style={{
+                        width: '28px',
+                        height: '28px',
+                        borderRadius: 'var(--radius-sm)',
+                        border: '1px solid transparent',
+                        background: 'transparent',
+                        color: 'var(--text-muted)',
+                        cursor: 'pointer',
+                        fontSize: '12px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        flexShrink: 0,
+                        transition: 'all var(--transition-fast)'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.borderColor = '#c0392b'
+                        e.currentTarget.style.color = '#e74c3c'
+                        e.currentTarget.style.background = 'rgba(192,57,43,0.08)'
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.borderColor = 'transparent'
+                        e.currentTarget.style.color = 'var(--text-muted)'
+                        e.currentTarget.style.background = 'transparent'
+                      }}
+                    >
+                      ✕
+                    </button>
+                  </div>
                 ))}
               </div>
 

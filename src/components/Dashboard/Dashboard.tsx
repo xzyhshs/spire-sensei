@@ -36,6 +36,7 @@ interface Props {
   onGameStateChange: (state: GameState) => void
   onCreateGame: (character: string) => void
   onSwitchGame: (path: string) => void
+  onDeleteGame: (path: string) => void
 }
 
 function HpBar({ hp, changed }: { hp: string; changed: boolean }) {
@@ -150,7 +151,7 @@ function PotionBadge({ name, isNew }: { name: string; isNew: boolean }) {
   )
 }
 
-export function Dashboard({ gameState, currentPath, savedGames, loading, onCreateGame, onSwitchGame }: Props) {
+export function Dashboard({ gameState, currentPath, savedGames, loading, onCreateGame, onSwitchGame, onDeleteGame }: Props) {
   const prevRef = useRef<GameState | null>(null)
   const prev = prevRef.current
   prevRef.current = gameState
@@ -183,6 +184,7 @@ export function Dashboard({ gameState, currentPath, savedGames, loading, onCreat
         loading={loading}
         onCreateGame={onCreateGame}
         onSwitchGame={onSwitchGame}
+        onDeleteGame={onDeleteGame}
       />
 
       {!gameState ? (
