@@ -1,5 +1,7 @@
-import fs from 'fs'
-import path from 'path'
+import defectCards from '../../data/cards/故障机器人.json'
+import watcherCards from '../../data/cards/观者.json'
+import ironcladCards from '../../data/cards/铁甲战士.json'
+import silentCards from '../../data/cards/静默猎手.json'
 
 export interface CardDef {
   name: string
@@ -15,30 +17,13 @@ export interface CardDef {
 
 let cardMap: Map<string, CardDef> | null = null
 
-function dataDir(): string {
-  // In development, __dirname is electron/lib; in production, same
-  return path.resolve(__dirname, '../../data/cards')
-}
-
 function loadCardFiles(): CardDef[] {
-  const dir = dataDir()
-  if (!fs.existsSync(dir)) {
-    console.log(`[card-db] Card data directory not found: ${dir}`)
-    return []
-  }
-  const result: CardDef[] = []
-  for (const file of fs.readdirSync(dir)) {
-    if (!file.endsWith('.json')) continue
-    try {
-      const raw = fs.readFileSync(path.join(dir, file), 'utf-8')
-      const cards = JSON.parse(raw) as CardDef[]
-      result.push(...cards)
-    } catch (e) {
-      console.log(`[card-db] Failed to parse ${file}:`, e instanceof Error ? e.message : e)
-    }
-  }
-  console.log(`[card-db] Loaded ${result.length} cards from ${dir}`)
-  return result
+  return [
+    ...(defectCards as CardDef[]),
+    ...(watcherCards as CardDef[]),
+    ...(ironcladCards as CardDef[]),
+    ...(silentCards as CardDef[]),
+  ]
 }
 
 export function loadAllCards(): Map<string, CardDef> {
