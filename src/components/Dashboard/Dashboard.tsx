@@ -105,16 +105,20 @@ function CardItem({ card, isNew }: { card: Card; isNew: boolean }) {
       border: card.upgraded ? '1px solid var(--border-gold)' : '1px solid transparent',
       background: card.upgraded ? 'rgba(201,169,110,0.06)' : 'transparent',
       fontSize: '13px', transition: 'background var(--transition-fast)',
-      animation: isNew ? 'dashSlideIn 0.35s ease-out' : 'none'
+      animation: isNew ? 'dashHighlight 0.6s ease-out' : 'none'
     }}>
       <span style={{
         width: '16px', textAlign: 'center',
-        color: card.upgraded ? 'var(--gold)' : 'var(--text-muted)', fontSize: '11px'
+        color: card.upgraded ? 'var(--gold)' : 'var(--text-muted)', fontSize: '11px',
+        display: 'inline-block',
+        animation: isNew ? 'dashBounce 0.45s ease-out' : 'none'
       }}>
         {card.upgraded ? '✦' : '·'}
       </span>
       <span style={{
-        color: card.upgraded ? 'var(--text-primary)' : 'var(--text-secondary)', flex: 1
+        color: card.upgraded ? 'var(--text-primary)' : 'var(--text-secondary)', flex: 1,
+        display: 'inline-block',
+        animation: isNew ? 'dashBounce 0.45s ease-out' : 'none'
       }}>
         {card.name}
       </span>
@@ -122,7 +126,7 @@ function CardItem({ card, isNew }: { card: Card; isNew: boolean }) {
         <span style={{
           color: 'var(--text-muted)', fontSize: '12px', fontFamily: 'var(--font-mono)',
           display: 'inline-block',
-          animation: isNew ? 'dashBounce 0.35s ease-out' : 'none'
+          animation: isNew ? 'dashBounce 0.45s ease-out' : 'none'
         }}>
           x{card.count}
         </span>

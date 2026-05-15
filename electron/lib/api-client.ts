@@ -358,8 +358,8 @@ export async function sendMessageStream(
     // Execute state updates
     stateUpdated = applyStateUpdateFromToolCalls(stateCalls, opts)
 
-    // Execute lookups and continue if needed
-    if (lookupCalls.length > 0) {
+    // Execute lookups and continue if any tool was called
+    if (r1ToolCalls.length > 0) {
       // Append assistant message with tool calls
       const assistantMsg: Record<string, unknown> = { role: 'assistant', content: round1.fullReply || null }
       assistantMsg.tool_calls = r1ToolCalls.map(tc => ({
