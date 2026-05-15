@@ -135,7 +135,7 @@ export function GameSelector({ savedGames, currentPath, loading, onCreateGame, o
             }}>
               <span>{currentGame.character}</span>
               <span style={{ color: 'var(--text-muted)', fontSize: '10px' }}>
-                {new Date(currentGame.updated).toLocaleDateString('zh-CN')}
+                {new Date(currentGame.updated).toLocaleString('zh-CN', { year: 'numeric', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
               </span>
             </div>
           )}
@@ -176,7 +176,7 @@ export function GameSelector({ savedGames, currentPath, loading, onCreateGame, o
                   >
                     <span>{game.character}</span>
                     <span style={{ color: 'var(--text-muted)', fontSize: '10px' }}>
-                      {new Date(game.updated).toLocaleDateString('zh-CN')}
+                      {new Date(game.updated).toLocaleString('zh-CN', { year: 'numeric', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                     </span>
                   </button>
                 ))}

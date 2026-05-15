@@ -68,12 +68,31 @@ export function ChatPanel({ messages, sending, config, onConfigChange, onOpenSet
             {sending && (
               <div style={{
                 alignSelf: 'flex-start',
-                color: 'var(--text-muted)',
-                fontSize: '12px',
-                fontStyle: 'italic',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
                 padding: '8px 16px'
               }}>
-                Sensei is thinking...
+                <span style={{ color: 'var(--text-muted)', fontSize: '12px', marginRight: '4px' }}>思考中</span>
+                {[0, 1, 2].map(i => (
+                  <span
+                    key={i}
+                    style={{
+                      width: '5px',
+                      height: '5px',
+                      borderRadius: '50%',
+                      background: 'var(--gold-dim)',
+                      display: 'inline-block',
+                      animation: `senseiDotBounce 1.4s ease-in-out ${i * 0.2}s infinite`
+                    }}
+                  />
+                ))}
+                <style>{`
+                  @keyframes senseiDotBounce {
+                    0%, 80%, 100% { transform: translateY(0); opacity: 0.3; }
+                    40% { transform: translateY(-6px); opacity: 1; }
+                  }
+                `}</style>
               </div>
             )}
           </div>
