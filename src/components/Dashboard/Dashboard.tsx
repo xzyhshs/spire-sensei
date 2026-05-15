@@ -1,5 +1,26 @@
+import { useRef } from 'react'
 import type { GameState, Card } from '../../types'
 import { GameSelector } from './GameSelector'
+
+const ANIM_STYLE = `
+@keyframes dashBounce {
+  0% { transform: scale(1); color: inherit; }
+  40% { transform: scale(1.3); color: #c9a96e; }
+  100% { transform: scale(1); color: inherit; }
+}
+@keyframes dashHighlight {
+  0% { background: rgba(201,169,110,0.25); }
+  100% { background: transparent; }
+}
+@keyframes dashSlideIn {
+  0% { opacity: 0; transform: translateX(-12px); }
+  100% { opacity: 1; transform: translateX(0); }
+}
+@keyframes dashFadeGreen {
+  0% { background: rgba(46,204,113,0.2); }
+  100% { background: transparent; }
+}
+`
 
 interface SavedGame {
   path: string
@@ -17,7 +38,7 @@ interface Props {
   onSwitchGame: (path: string) => void
 }
 
-function HpBar({ hp }: { hp: string }) {
+function HpBar({ hp, changed }: { hp: string; changed: boolean }) {
   const [current, max] = hp.split('/').map(Number)
   const pct = max ? Math.min(100, (current / max) * 100) : 0
   const isLow = pct < 30
@@ -31,7 +52,9 @@ function HpBar({ hp }: { hp: string }) {
         <span style={{
           color: isLow ? 'var(--hp-red-glow)' : 'var(--text-primary)',
           fontWeight: 600,
-          fontFamily: 'var(--font-mono)'
+          fontFamily: 'var(--font-mono)',
+          display: 'inline-block',
+          animation: changed ? 'dashBounce 0.45s ease-out' : 'none'
         }}>
           {current}/{max}
         </span>
@@ -46,7 +69,7 @@ function HpBar({ hp }: { hp: string }) {
             ? 'linear-gradient(90deg, #c0392b, #e74c3c)'
             : 'linear-gradient(90deg, #c0392b, #e74c3c, #c9a96e)',
           borderRadius: '2px',
-          transition: 'width var(--transition-normal)',
+          transition: 'width 0.5s ease-out',
           boxShadow: isLow ? '0 0 8px rgba(231,76,60,0.4)' : 'none'
         }} />
       </div>
@@ -54,30 +77,34 @@ function HpBar({ hp }: { hp: string }) {
   )
 }
 
-function StatRow({ label, value, accent }: { label: string; value: string | number; accent?: boolean }) {
+function StatRow({ label, value, accent, changed }: { label: string; value: string | number; accent?: boolean; changed?: boolean }) {
   return (
     <div style={{
       display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-      padding: '6px 0', borderBottom: '1px solid var(--border-subtle)'
+      padding: '6px 0', borderBottom: '1px solid var(--border-subtle)',
+      animation: changed ? 'dashHighlight 0.6s ease-out' : 'none'
     }}>
       <span style={{ color: 'var(--text-secondary)', fontSize: '13px' }}>{label}</span>
       <span style={{
         color: accent ? 'var(--gold)' : 'var(--text-primary)',
         fontSize: '13px', fontWeight: 600,
-        fontFamily: accent ? 'var(--font-display)' : 'var(--font-body)'
+        fontFamily: accent ? 'var(--font-display)' : 'var(--font-body)',
+        display: 'inline-block',
+        animation: changed ? 'dashBounce 0.45s ease-out' : 'none'
       }}>{value}</span>
     </div>
   )
 }
 
-function CardItem({ card }: { card: Card }) {
+function CardItem({ card, isNew }: { card: Card; isNew: boolean }) {
   return (
     <div style={{
       display: 'flex', alignItems: 'center', gap: '8px', padding: '4px 8px',
       borderRadius: 'var(--radius-sm)',
       border: card.upgraded ? '1px solid var(--border-gold)' : '1px solid transparent',
       background: card.upgraded ? 'rgba(201,169,110,0.06)' : 'transparent',
-      fontSize: '13px', transition: 'background var(--transition-fast)'
+      fontSize: '13px', transition: 'background var(--transition-fast)',
+      animation: isNew ? 'dashSlideIn 0.35s ease-out' : 'none'
     }}>
       <span style={{
         width: '16px', textAlign: 'center',
@@ -91,7 +118,11 @@ function CardItem({ card }: { card: Card }) {
         {card.name}
       </span>
       {card.count > 1 && (
-        <span style={{ color: 'var(--text-muted)', fontSize: '12px', fontFamily: 'var(--font-mono)' }}>
+        <span style={{
+          color: 'var(--text-muted)', fontSize: '12px', fontFamily: 'var(--font-mono)',
+          display: 'inline-block',
+          animation: isNew ? 'dashBounce 0.35s ease-out' : 'none'
+        }}>
           x{card.count}
         </span>
       )}
@@ -99,9 +130,52 @@ function CardItem({ card }: { card: Card }) {
   )
 }
 
+function RelicItem({ name, isNew }: { name: string; isNew: boolean }) {
+  return (
+    <div style={{
+      padding: '4px 8px', fontSize: '13px', color: 'var(--text-secondary)',
+      animation: isNew ? 'dashSlideIn 0.35s ease-out' : 'none'
+    }}>
+      <span style={{ color: 'var(--gold-dim)', marginRight: '8px' }}>◆</span>
+      {name}
+    </div>
+  )
+}
+
+function PotionBadge({ name, isNew }: { name: string; isNew: boolean }) {
+  return (
+    <span className="badge badge-gold" style={{
+      animation: isNew ? 'dashSlideIn 0.35s ease-out' : 'none'
+    }}>{name}</span>
+  )
+}
+
 export function Dashboard({ gameState, currentPath, savedGames, loading, onCreateGame, onSwitchGame }: Props) {
+  const prevRef = useRef<GameState | null>(null)
+  const prev = prevRef.current
+  prevRef.current = gameState
+
+  const changed = {
+    floor: prev && gameState ? prev.floor !== gameState.floor : false,
+    gold: prev && gameState ? prev.gold !== gameState.gold : false,
+    hp: prev && gameState ? prev.hp !== gameState.hp : false
+  }
+
+  const newCards = gameState && prev
+    ? new Set(gameState.cards.filter(c => !prev.cards.find(p => p.name === c.name)).map(c => c.name))
+    : new Set<string>()
+
+  const newRelics = gameState && prev
+    ? new Set(gameState.relics.filter(r => !prev.relics.includes(r)))
+    : new Set<string>()
+
+  const newPotions = gameState && prev
+    ? new Set(gameState.potions.filter(p => !prev.potions.includes(p)))
+    : new Set<string>()
+
   return (
     <div style={{ padding: '16px' }}>
+      <style>{ANIM_STYLE}</style>
       {/* Game Selector */}
       <GameSelector
         savedGames={savedGames}
@@ -127,10 +201,9 @@ export function Dashboard({ gameState, currentPath, savedGames, loading, onCreat
       <div className="panel-card gold-border" style={{ padding: '16px', marginBottom: '16px' }}>
         <div className="section-title">状态</div>
         <StatRow label="角色" value={gameState.character} accent />
-        <StatRow label="层数" value={gameState.floor} />
-        <StatRow label="金币" value={gameState.gold} />
-        <StatRow label="幕" value={gameState.act} />
-        <HpBar hp={gameState.hp} />
+        <StatRow label="层数" value={gameState.floor} changed={changed.floor} />
+        <StatRow label="金币" value={gameState.gold} changed={changed.gold} />
+        <HpBar hp={gameState.hp} changed={changed.hp} />
       </div>
 
       {/* Deck */}
@@ -139,7 +212,7 @@ export function Dashboard({ gameState, currentPath, savedGames, loading, onCreat
         <div className="gold-divider" />
         <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
           {gameState.cards.map((card, i) => (
-            <CardItem key={`${card.name}-${i}`} card={card} />
+            <CardItem key={`${card.name}-${i}`} card={card} isNew={newCards.has(card.name)} />
           ))}
         </div>
       </div>
@@ -151,10 +224,7 @@ export function Dashboard({ gameState, currentPath, savedGames, loading, onCreat
           <div className="gold-divider" />
           <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
             {gameState.relics.map((relic, i) => (
-              <div key={i} style={{ padding: '4px 8px', fontSize: '13px', color: 'var(--text-secondary)' }}>
-                <span style={{ color: 'var(--gold-dim)', marginRight: '8px' }}>◆</span>
-                {relic}
-              </div>
+              <RelicItem key={i} name={relic} isNew={newRelics.has(relic)} />
             ))}
           </div>
         </div>
@@ -167,7 +237,7 @@ export function Dashboard({ gameState, currentPath, savedGames, loading, onCreat
           <div className="gold-divider" />
           <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
             {gameState.potions.map((p, i) => (
-              <span key={i} className="badge badge-gold">{p}</span>
+              <PotionBadge key={i} name={p} isNew={newPotions.has(p)} />
             ))}
           </div>
         </div>
