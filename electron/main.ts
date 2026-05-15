@@ -70,7 +70,7 @@ function registerIpcHandlers() {
   // API: send message
   ipcMain.handle('api:sendMessage', async (_event, opts: {
     text: string
-    imageBase64?: string
+    imageBase64?: string[]
     config?: Record<string, unknown>
   }) => {
     const diskConfig = loadConfig()
@@ -126,7 +126,7 @@ function registerIpcHandlers() {
   // API: send message (streaming)
   ipcMain.handle('api:sendMessageStream', async (_event, opts: {
     text: string
-    imageBase64?: string
+    imageBase64?: string[]
     config?: Record<string, unknown>
   }) => {
     const diskConfig = loadConfig()

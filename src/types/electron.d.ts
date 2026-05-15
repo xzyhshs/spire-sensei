@@ -7,8 +7,8 @@ export interface ElectronAPI {
   createGameFile: (character: string) => Promise<string>
   getConfig: () => Promise<Record<string, unknown>>
   setConfig: (key: string, value: unknown) => Promise<void>
-  sendMessage: (opts: { text: string; imageBase64?: string; config?: AppConfig }) => Promise<string>
-  sendMessageStream: (opts: { text: string; imageBase64?: string; config?: AppConfig }) => Promise<void>
+  sendMessage: (opts: { text: string; imageBase64?: string[]; config?: AppConfig }) => Promise<string>
+  sendMessageStream: (opts: { text: string; imageBase64?: string[]; config?: AppConfig }) => Promise<void>
   onStreamChunk: (cb: (text: string) => void) => () => void
   onStreamDone: (cb: (data: { gameState: GameState | null }) => void) => () => void
   onStreamError: (cb: (msg: string) => void) => () => void

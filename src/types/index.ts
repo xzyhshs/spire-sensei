@@ -22,7 +22,7 @@ export interface ChatMessage {
   id: string
   role: 'user' | 'assistant'
   text: string
-  imageBase64?: string
+  imageBase64?: string[]
   timestamp: number
 }
 

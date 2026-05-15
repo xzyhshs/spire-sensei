@@ -6,7 +6,7 @@ import type { AppConfig, Persona, GameState } from '../../src/types'
 
 interface SendMessageOpts {
   text: string
-  imageBase64?: string
+  imageBase64?: string[]
   gameFilePath: string | null
   config: AppConfig
   persona: Persona
@@ -82,14 +82,17 @@ function buildMessages(opts: SendMessageOpts): BuildMessagesResult {
     { role: 'system', content: systemPrompt }
   ]
 
-  if (opts.imageBase64) {
-    const userContent: Array<{ type: string; text?: string; image_url?: { url: string } }> = [
-      { type: 'image_url', image_url: { url: `data:image/jpeg;base64,${opts.imageBase64}` } }
-    ]
+  if (opts.imageBase64 && opts.imageBase64.length > 0) {
+    const userContent: Array<{ type: string; text?: string; image_url?: { url: string } }> = opts.imageBase64.map(img =>
+      ({ type: 'image_url', image_url: { url: `data:image/jpeg;base64,${img}` } })
+    )
     if (opts.text) {
       userContent.push({ type: 'text', text: opts.text })
     } else {
-      userContent.push({ type: 'text', text: '请分析这张截图。如果不确定我的意图（选牌/更新状态/路线建议等），请先问我。' })
+      const hint = opts.imageBase64.length > 1
+        ? '请分析这些截图。如果不确定我的意图（选牌/更新状态/路线建议等），请先问我。'
+        : '请分析这张截图。如果不确定我的意图（选牌/更新状态/路线建议等），请先问我。'
+      userContent.push({ type: 'text', text: hint })
     }
     messages.push({ role: 'user', content: userContent })
   } else {

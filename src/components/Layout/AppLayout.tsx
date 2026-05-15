@@ -21,7 +21,7 @@ interface Props {
   onConfigChange: (config: Partial<AppConfig>) => void
   onOpenSettings: () => void
   messages: ChatMessage[]
-  onSendMessage: (text: string, imageBase64?: string) => void
+  onSendMessage: (text: string, imageBase64?: string[]) => void
 }
 
 export function AppLayout({ gameState, currentPath, savedGames, loading, config, sending, onGameStateChange, onCreateGame, onSwitchGame, onConfigChange, onOpenSettings, messages, onSendMessage }: Props) {

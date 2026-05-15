@@ -26,21 +26,30 @@ export function MessageBubble({ message }: Props) {
         {isUser ? 'You' : 'Sensei'}
       </span>
 
-      {/* Image preview if present */}
-      {message.imageBase64 && (
+      {/* Image previews if present */}
+      {message.imageBase64 && message.imageBase64.length > 0 && (
         <div style={{
-          maxWidth: '240px',
+          display: 'flex',
+          gap: '6px',
+          flexWrap: 'wrap',
           marginBottom: '8px',
-          borderRadius: 'var(--radius-md)',
-          overflow: 'hidden',
-          border: '1px solid var(--border-subtle)',
-          boxShadow: 'var(--shadow-card)'
+          maxWidth: '360px'
         }}>
-          <img
-            src={`data:image/jpeg;base64,${message.imageBase64}`}
-            alt="Screenshot"
-            style={{ width: '100%', display: 'block' }}
-          />
+          {message.imageBase64.map((img, i) => (
+            <div key={i} style={{
+              maxWidth: '200px',
+              borderRadius: 'var(--radius-md)',
+              overflow: 'hidden',
+              border: '1px solid var(--border-subtle)',
+              boxShadow: 'var(--shadow-card)'
+            }}>
+              <img
+                src={`data:image/jpeg;base64,${img}`}
+                alt={`Screenshot ${i + 1}`}
+                style={{ width: '100%', display: 'block' }}
+              />
+            </div>
+          ))}
         </div>
       )}
 

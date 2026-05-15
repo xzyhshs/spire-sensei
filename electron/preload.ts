@@ -7,9 +7,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   createGameFile: (character: string) => ipcRenderer.invoke('file:createGame', character),
   getConfig: () => ipcRenderer.invoke('config:get'),
   setConfig: (key: string, value: unknown) => ipcRenderer.invoke('config:set', key, value),
-  sendMessage: (opts: { text: string; imageBase64?: string }) =>
+  sendMessage: (opts: { text: string; imageBase64?: string[] }) =>
     ipcRenderer.invoke('api:sendMessage', opts),
-  sendMessageStream: (opts: { text: string; imageBase64?: string }) =>
+  sendMessageStream: (opts: { text: string; imageBase64?: string[] }) =>
     ipcRenderer.invoke('api:sendMessageStream', opts),
   onStreamChunk: (cb: (text: string) => void) => {
     const h = (_e: Electron.IpcRendererEvent, text: string) => cb(text)

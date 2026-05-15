@@ -10,7 +10,7 @@ interface Props {
   config: AppConfig
   onConfigChange: (config: Partial<AppConfig>) => void
   onOpenSettings: () => void
-  onSendMessage: (text: string, imageBase64?: string) => void
+  onSendMessage: (text: string, imageBase64?: string[]) => void
 }
 
 export function ChatPanel({ messages, sending, config, onConfigChange, onOpenSettings, onSendMessage }: Props) {

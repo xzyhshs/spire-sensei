@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback } from 'react'
 
 interface Props {
-  onSend: (text: string, imageBase64?: string) => void
+  onSend: (text: string, imageBase64?: string[]) => void
   disabled?: boolean
 }
 
@@ -14,12 +14,14 @@ const MODES = [
 
 export function ChatInput({ onSend, disabled }: Props) {
   const [text, setText] = useState('')
-  const [image, setImage] = useState<string | null>(null)
+  const [images, setImages] = useState<string[]>([])
   const [activeModes, setActiveModes] = useState<Set<string>>(new Set())
   const fileInputRef = useRef<HTMLInputElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
-  const canSend = text.trim() || image
+  const canSend = text.trim() || images.length > 0
+
+  const addImage = (base64: string) => setImages(prev => [...prev, base64])
 
   const toggleMode = (key: string) => {
     setActiveModes(prev => {
@@ -40,7 +42,7 @@ export function ChatInput({ onSend, disabled }: Props) {
         const reader = new FileReader()
         reader.onload = () => {
           const base64 = (reader.result as string).split(',')[1]
-          setImage(base64)
+          addImage(base64)
         }
         reader.readAsDataURL(file)
         return
@@ -55,7 +57,7 @@ export function ChatInput({ onSend, disabled }: Props) {
     const reader = new FileReader()
     reader.onload = () => {
       const base64 = (reader.result as string).split(',')[1]
-      setImage(base64)
+      addImage(base64)
     }
     reader.readAsDataURL(file)
   }, [])
@@ -74,9 +76,9 @@ export function ChatInput({ onSend, disabled }: Props) {
       const modeHint = `【${activeLabels.join('、')}】请识别内容并调用 update_game_state 更新对应数据`
       finalText = text ? `${modeHint}：${text}` : modeHint
     }
-    onSend(finalText, image || undefined)
+    onSend(finalText, images.length > 0 ? images : undefined)
     setText('')
-    setImage(null)
+    setImages([])
   }
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -86,7 +88,7 @@ export function ChatInput({ onSend, disabled }: Props) {
     }
   }
 
-  const removeImage = () => setImage(null)
+  const removeImage = (index: number) => setImages(prev => prev.filter((_, i) => i !== index))
 
   return (
     <div
@@ -99,46 +101,54 @@ export function ChatInput({ onSend, disabled }: Props) {
       onDrop={handleDrop}
       onDragOver={handleDragOver}
     >
-      {/* Image preview */}
-      {image && (
+      {/* Image previews */}
+      {images.length > 0 && (
         <div style={{
-          position: 'relative',
-          display: 'inline-block',
-          marginBottom: '8px'
+          display: 'flex',
+          gap: '8px',
+          marginBottom: '8px',
+          flexWrap: 'wrap'
         }}>
-          <img
-            src={`data:image/jpeg;base64,${image}`}
-            alt="Preview"
-            style={{
-              maxHeight: '120px',
-              maxWidth: '240px',
-              borderRadius: 'var(--radius-sm)',
-              border: '1px solid var(--border-gold)',
-              display: 'block'
-            }}
-          />
-          <button
-            onClick={removeImage}
-            style={{
-              position: 'absolute',
-              top: '-8px',
-              right: '-8px',
-              width: '22px',
-              height: '22px',
-              borderRadius: '50%',
-              border: '1px solid var(--border-subtle)',
-              background: 'var(--bg-elevated)',
-              color: 'var(--text-secondary)',
-              cursor: 'pointer',
-              fontSize: '12px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              lineHeight: 1
-            }}
-          >
-            ✕
-          </button>
+          {images.map((img, i) => (
+            <div key={i} style={{
+              position: 'relative',
+              display: 'inline-block'
+            }}>
+              <img
+                src={`data:image/jpeg;base64,${img}`}
+                alt={`Preview ${i + 1}`}
+                style={{
+                  maxHeight: '120px',
+                  maxWidth: '200px',
+                  borderRadius: 'var(--radius-sm)',
+                  border: '1px solid var(--border-gold)',
+                  display: 'block'
+                }}
+              />
+              <button
+                onClick={() => removeImage(i)}
+                style={{
+                  position: 'absolute',
+                  top: '-8px',
+                  right: '-8px',
+                  width: '22px',
+                  height: '22px',
+                  borderRadius: '50%',
+                  border: '1px solid var(--border-subtle)',
+                  background: 'var(--bg-elevated)',
+                  color: 'var(--text-secondary)',
+                  cursor: 'pointer',
+                  fontSize: '12px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  lineHeight: 1
+                }}
+              >
+                ✕
+              </button>
+            </div>
+          ))}
         </div>
       )}
 
@@ -213,7 +223,7 @@ export function ChatInput({ onSend, disabled }: Props) {
             const reader = new FileReader()
             reader.onload = () => {
               const base64 = (reader.result as string).split(',')[1]
-              setImage(base64)
+              addImage(base64)
             }
             reader.readAsDataURL(file)
           }}

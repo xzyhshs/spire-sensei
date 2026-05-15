@@ -46,8 +46,8 @@ function App() {
     }
   }
 
-  const handleSendMessage = async (text: string, imageBase64?: string) => {
-    const updated = await sendMessage({ text, imageBase64: imageBase64 || '', config, gameState })
+  const handleSendMessage = async (text: string, imageBase64?: string[]) => {
+    const updated = await sendMessage({ text, imageBase64: imageBase64, config, gameState })
     if (updated) updateGameState(updated)
   }
 

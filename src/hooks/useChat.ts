@@ -9,7 +9,7 @@ export { PERSONAS }
 
 interface SendOpts {
   text: string
-  imageBase64?: string
+  imageBase64?: string[]
   config: AppConfig
   gameState: GameState | null
 }
