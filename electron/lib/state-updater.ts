@@ -11,6 +11,7 @@ interface StateUpdate {
   addCards?: string[]
   removeCards?: string[]
   upgradeCards?: string[]
+  downgradeCards?: string[]
   addRelics?: string[]
   removeRelics?: string[]
   clearRelics?: boolean
@@ -61,6 +62,12 @@ export function applyStateUpdate(mdContent: string, update: StateUpdate): string
     for (const name of update.upgradeCards) {
       const card = state.cards.find(c => c.name === name)
       if (card) { card.upgraded = true }
+    }
+  }
+  if (update.downgradeCards) {
+    for (const name of update.downgradeCards) {
+      const card = state.cards.find(c => c.name === name)
+      if (card) { card.upgraded = false }
     }
   }
 

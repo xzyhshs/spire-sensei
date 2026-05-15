@@ -17,6 +17,7 @@
   "files": [
     "dist/**/*",
     "dist-electron/**/*",
+    "data/**/*",
     "resources/**/*"
   ],
   "npmRebuild": false,

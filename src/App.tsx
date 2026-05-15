@@ -27,7 +27,7 @@ function App() {
     deleteGame
   } = useGameState()
 
-  const { messages, sending, sendMessage, cancelMessage, saveChatHistory, loadChatHistory } = useChat()
+  const { messages, sending, sendMessage, cancelMessage, setMessages, saveChatHistory, loadChatHistory } = useChat()
   const [config, setConfig] = useState<AppConfig>(DEFAULT_CONFIG)
   const [configLoaded, setConfigLoaded] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
@@ -45,6 +45,12 @@ function App() {
     for (const [key, value] of Object.entries(partial)) {
       window.electronAPI.setConfig(key, value)
     }
+  }
+
+  const handleCreateGame = async (character: string) => {
+    if (currentPath) await saveChatHistory(currentPath)
+    await createGame(character)
+    setMessages([])
   }
 
   const handleSendMessage = async (text: string, imageBase64?: string[]) => {
@@ -74,7 +80,7 @@ function App() {
         config={config}
         sending={sending}
         onGameStateChange={updateGameState}
-        onCreateGame={createGame}
+        onCreateGame={handleCreateGame}
         onSwitchGame={handleSwitchGame}
         onDeleteGame={handleDeleteGame}
         onConfigChange={handleConfigChange}

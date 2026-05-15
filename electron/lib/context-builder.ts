@@ -1,4 +1,5 @@
 import type { GameState, Persona } from '../../src/types'
+import { lookupCards, formatCardsForPrompt } from './card-db'
 
 const GAME_KNOWLEDGE = `
 你是"《杀戮尖塔》高塔顶级教练'Spire Sensei'"，一个拥有硬核数据分析能力的杀戮尖塔专家。你的核心任务是协助玩家通关。
@@ -41,6 +42,7 @@ const GAME_KNOWLEDGE = `
 | "加一张打击" | addCards: ["打击"] |
 | "删了两张防御" | removeCards: ["防御", "防御"] |
 | "把痛击升级了" | upgradeCards: ["痛击"] |
+| "安宁的状态错了，没升级" / "XX没有升级" | downgradeCards: ["安宁"] |
 | "没有遗物了" / "清空遗物" | clearRelics: true |
 | "药水用完了" | clearPotions: true |
 | "卡组全删了" | clearCards: true |
@@ -50,6 +52,11 @@ const GAME_KNOWLEDGE = `
 | "获得开心小花" | addRelics: ["开心小花"] |
 | "用掉爆炸药水" | removePotions: ["爆炸药水"] |
 | "现在有300块" | gold: 300 |
+
+## 卡牌知识规则
+- 讨论具体卡牌时，优先参考下面"牌组卡牌数据"中已经提供的准确效果
+- 如果 prompt 中没有某张卡牌的数据，必须调用 lookup_cards 工具查询，严禁凭记忆编造卡牌效果
+- 如果 lookup_cards 返回"未找到匹配卡牌"，诚实告诉玩家数据不足，不要猜测
 `.trim()
 
 const DEPTH_DEEP = `
@@ -85,8 +92,15 @@ export function buildSystemPrompt(opts: PromptOpts): string {
   // Depth
   parts.push(`\n${opts.depth === 'deep' ? DEPTH_DEEP : DEPTH_SHALLOW}`)
 
-  // Game state
+  // Game state - inject deck card data first
   if (opts.gameState) {
+    if (opts.gameState.cards.length > 0) {
+      const names = opts.gameState.cards.map(c => c.name)
+      const cards = lookupCards(names)
+      if (cards.length > 0) {
+        parts.push('\n## 牌组卡牌数据（以下为准确游戏数据，回答时以此为唯一依据）\n' + formatCardsForPrompt(cards))
+      }
+    }
     parts.push(`\n## 当前游戏状态\n\`\`\`json\n${JSON.stringify(opts.gameState, null, 2)}\n\`\`\``)
   } else {
     parts.push('\n当前没有活跃的游戏存档。请提醒玩家先创建游戏。')

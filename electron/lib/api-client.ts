@@ -1,6 +1,7 @@
 import { buildSystemPrompt } from './context-builder'
 import { applyStateUpdate } from './state-updater'
 import { readGame } from './game-manager'
+import { lookupCards, formatCardsForPrompt } from './card-db'
 import fs from 'fs'
 import type { AppConfig, Persona, GameState } from '../../src/types'
 
@@ -21,7 +22,7 @@ const PERSONAS: Persona[] = [
 
 export { PERSONAS }
 
-// ── Tool definition for state update ──
+// ── Tool definitions ──
 
 const STATE_UPDATE_TOOL = {
   type: 'function',
@@ -40,6 +41,7 @@ const STATE_UPDATE_TOOL = {
         addCards: { type: 'array', items: { type: 'string' }, description: '添加的卡牌。如"加一张防御"→["防御"]，"加两张打击"→["打击","打击"]' },
         removeCards: { type: 'array', items: { type: 'string' }, description: '移除的卡牌。如"删一张打击"→["打击"]，"删了两张防御"→["防御","防御"]' },
         upgradeCards: { type: 'array', items: { type: 'string' }, description: '升级的卡牌。如"把痛击升级了"→["痛击"]' },
+        downgradeCards: { type: 'array', items: { type: 'string' }, description: '撤销升级的卡牌。如"安宁没有升级""XX的状态错了，没升级"→["安宁"]' },
         clearCards: { type: 'boolean', description: '清空所有卡牌。如"卡组全删了""清空卡组"' },
         addRelics: { type: 'array', items: { type: 'string' }, description: '添加的遗物。如"获得了开心小花"→["开心小花"]' },
         removeRelics: { type: 'array', items: { type: 'string' }, description: '移除的遗物。如"删掉开心小花"→["开心小花"]' },
@@ -50,6 +52,21 @@ const STATE_UPDATE_TOOL = {
         options: { type: 'string', description: '当前选项内容' },
         clearOptions: { type: 'boolean', description: '是否清空当前选项' }
       }
+    }
+  }
+}
+
+const LOOKUP_CARDS_TOOL = {
+  type: 'function',
+  function: {
+    name: 'lookup_cards',
+    description: '查询卡牌准确数据（费用/类型/效果/升级效果）。讨论具体卡牌效果时必须先调用此工具，严禁凭记忆编造卡牌数据。',
+    parameters: {
+      type: 'object',
+      properties: {
+        names: { type: 'array', items: { type: 'string' }, description: '要查询的卡牌名称列表' }
+      },
+      required: ['names']
     }
   }
 }
@@ -175,7 +192,7 @@ export async function sendMessage(opts: SendMessageOpts): Promise<{
         model,
         messages,
         max_tokens: 2000,
-        tools: [STATE_UPDATE_TOOL],
+        tools: [STATE_UPDATE_TOOL, LOOKUP_CARDS_TOOL],
         tool_choice: 'auto'
       }),
       signal: controller.signal
@@ -208,7 +225,89 @@ export async function sendMessage(opts: SendMessageOpts): Promise<{
   }
 }
 
+// ── Tool execution helpers ──
+
+function executeLookupCards(args: string): string {
+  try {
+    const { names } = JSON.parse(args)
+    if (!Array.isArray(names) || names.length === 0) return '未提供卡牌名称'
+    const cards = lookupCards(names)
+    if (cards.length === 0) return '未找到匹配卡牌，禁止编造效果'
+    return '以下为准确卡牌数据，请以此为准回复：\n' + formatCardsForPrompt(cards)
+  } catch {
+    return 'lookup_cards 参数解析失败'
+  }
+}
+
 // ── Streaming ──
+
+interface StreamRoundResult {
+  fullReply: string
+  toolCalls: AccumulatedToolCall[]
+}
+
+async function streamSSE(
+  response: Response,
+  onChunk: (text: string) => void
+): Promise<StreamRoundResult> {
+  const reader = response.body!.getReader()
+  const decoder = new TextDecoder()
+  let buffer = ''
+  let fullReply = ''
+  const toolCallMap = new Map<number, AccumulatedToolCall>()
+
+  while (true) {
+    const { done, value } = await reader.read()
+    if (done) break
+
+    buffer += decoder.decode(value, { stream: true })
+    const lines = buffer.split('\n')
+    buffer = lines.pop() || ''
+
+    for (const line of lines) {
+      const trimmed = line.trim()
+      if (!trimmed || !trimmed.startsWith('data:')) continue
+      const data = trimmed.slice(5).trim()
+      if (data === '[DONE]') continue
+
+      try {
+        const chunk = JSON.parse(data)
+        const delta = chunk.choices?.[0]?.delta
+        if (!delta) continue
+
+        if (delta.content) {
+          fullReply += delta.content
+          onChunk(delta.content)
+        }
+
+        const tcDeltas = parseToolCalls(delta)
+        for (const tc of tcDeltas) {
+          const existing = toolCallMap.get(tc.index) || { id: '', name: '', arguments: '' }
+          if (tc.id) existing.id = tc.id
+          if (tc.function?.name) existing.name = tc.function.name
+          if (tc.function?.arguments) existing.arguments += tc.function.arguments
+          toolCallMap.set(tc.index, existing)
+        }
+      } catch {
+        // skip unparseable chunks
+      }
+    }
+  }
+
+  return { fullReply, toolCalls: Array.from(toolCallMap.values()) }
+}
+
+function makeStreamRequestBody(model: string, messages: Array<Record<string, unknown>>) {
+  return JSON.stringify({
+    model,
+    messages,
+    max_tokens: 2000,
+    stream: true,
+    stream_options: { include_usage: true },
+    tools: [STATE_UPDATE_TOOL, LOOKUP_CARDS_TOOL],
+    tool_choice: 'auto'
+  })
+}
 
 export interface StreamCallbacks {
   onChunk: (text: string) => void
@@ -221,27 +320,26 @@ export async function sendMessageStream(
   callbacks: StreamCallbacks,
   externalController?: AbortController
 ): Promise<void> {
-  const { messages, apiUrl, model } = buildMessages(opts)
+  const { messages: baseMessages, apiUrl, model } = buildMessages(opts)
 
   const controller = externalController || new AbortController()
   const timeout = externalController ? null : setTimeout(() => controller.abort(), 180000)
 
+  // Mutable copy for multi-round
+  const msgArr: Array<Record<string, unknown>> = [...baseMessages]
+
   try {
-    const response = await fetch(apiUrl, {
+    let allReplies = ''
+    let stateUpdated = false
+
+    // ── Round 1 ──
+    let response = await fetch(apiUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${opts.config.apiKey}`
       },
-      body: JSON.stringify({
-        model,
-        messages,
-        max_tokens: 2000,
-        stream: true,
-        stream_options: { include_usage: true },
-        tools: [STATE_UPDATE_TOOL],
-        tool_choice: 'auto'
-      }),
+      body: makeStreamRequestBody(model, msgArr),
       signal: controller.signal
     })
 
@@ -250,74 +348,80 @@ export async function sendMessageStream(
       throw new Error(`API error ${response.status}: ${err}`)
     }
 
-    const reader = response.body!.getReader()
-    const decoder = new TextDecoder()
-    let buffer = ''
-    let fullReply = ''
-    const toolCallMap = new Map<number, AccumulatedToolCall>()
+    const round1 = await streamSSE(response, callbacks.onChunk)
+    const r1ToolCalls = round1.toolCalls
 
-    while (true) {
-      const { done, value } = await reader.read()
-      if (done) break
+    // Separate tool calls by type
+    const stateCalls = r1ToolCalls.filter(tc => tc.name === 'update_game_state')
+    const lookupCalls = r1ToolCalls.filter(tc => tc.name === 'lookup_cards')
 
-      buffer += decoder.decode(value, { stream: true })
-      const lines = buffer.split('\n')
-      buffer = lines.pop() || ''
+    // Execute state updates
+    stateUpdated = applyStateUpdateFromToolCalls(stateCalls, opts)
 
-      for (const line of lines) {
-        const trimmed = line.trim()
-        if (!trimmed || !trimmed.startsWith('data:')) continue
-        const data = trimmed.slice(5).trim()
-        if (data === '[DONE]') continue
+    // Execute lookups and continue if needed
+    if (lookupCalls.length > 0) {
+      // Append assistant message with tool calls
+      const assistantMsg: Record<string, unknown> = { role: 'assistant', content: round1.fullReply || null }
+      assistantMsg.tool_calls = r1ToolCalls.map(tc => ({
+        id: tc.id,
+        type: 'function',
+        function: { name: tc.name, arguments: tc.arguments }
+      }))
+      msgArr.push(assistantMsg)
 
-        try {
-          const chunk = JSON.parse(data)
-          const delta = chunk.choices?.[0]?.delta
-          if (!delta) continue
-
-          // Text content
-          if (delta.content) {
-            fullReply += delta.content
-            callbacks.onChunk(delta.content)
-          }
-
-          // Tool calls (fragmented across chunks)
-          const tcDeltas = parseToolCalls(delta)
-          for (const tc of tcDeltas) {
-            const existing = toolCallMap.get(tc.index) || { id: '', name: '', arguments: '' }
-            if (tc.id) existing.id = tc.id
-            if (tc.function?.name) existing.name = tc.function.name
-            if (tc.function?.arguments) existing.arguments += tc.function.arguments
-            toolCallMap.set(tc.index, existing)
-          }
-        } catch {
-          // skip unparseable chunks
-        }
+      // Execute lookups + state update confirmations
+      for (const tc of lookupCalls) {
+        const result = executeLookupCards(tc.arguments)
+        msgArr.push({ role: 'tool', tool_call_id: tc.id, content: result })
       }
+      for (const tc of stateCalls) {
+        msgArr.push({ role: 'tool', tool_call_id: tc.id, content: '状态已更新' })
+      }
+
+      // ── Round 2 ──
+      response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${opts.config.apiKey}`
+        },
+        body: makeStreamRequestBody(model, msgArr),
+        signal: controller.signal
+      })
+
+      if (!response.ok) {
+        const err = await response.text()
+        throw new Error(`API error ${response.status}: ${err}`)
+      }
+
+      const round2 = await streamSSE(response, callbacks.onChunk)
+      allReplies = round2.fullReply
+
+      // Handle any additional tool calls from round 2
+      const r2StateCalls = round2.toolCalls.filter(tc => tc.name === 'update_game_state')
+      if (r2StateCalls.length > 0) {
+        const updated = applyStateUpdateFromToolCalls(r2StateCalls, opts)
+        if (updated) stateUpdated = true
+      }
+    } else {
+      allReplies = round1.fullReply
     }
 
-    // Execute accumulated tool calls
-    const accumulated = Array.from(toolCallMap.values())
-    const stateUpdated = accumulated.length > 0
-      ? applyStateUpdateFromToolCalls(accumulated, opts)
-      : false
-
-    // Fallback: if no tools, try markdown-based extraction (backward compat)
-    if (!stateUpdated && fullReply) {
-      // try legacy markdown extraction if tools didn't fire
+    // Fallback: if no tools fired, try markdown-based extraction (backward compat)
+    if (!stateUpdated && allReplies) {
       const { extractStateJson } = await import('./state-updater')
-      const update = extractStateJson(fullReply)
+      const update = extractStateJson(allReplies)
       if (update && opts.gameFilePath && opts.gameState) {
         console.log('[api-client] Fallback markdown state update:', JSON.stringify(update))
         const rawMd = fs.readFileSync(opts.gameFilePath, 'utf-8')
         const updatedMd = applyStateUpdate(rawMd, update)
         fs.writeFileSync(opts.gameFilePath, updatedMd, 'utf-8')
-        callbacks.onDone({ reply: fullReply, stateUpdated: true })
+        callbacks.onDone({ reply: allReplies, stateUpdated: true })
         return
       }
     }
 
-    callbacks.onDone({ reply: fullReply, stateUpdated })
+    callbacks.onDone({ reply: allReplies, stateUpdated })
   } catch (err) {
     callbacks.onError(err instanceof Error ? err : new Error(String(err)))
   } finally {
