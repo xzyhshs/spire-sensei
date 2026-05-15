@@ -60,6 +60,17 @@ export function lookupCards(names: string[]): CardDef[] {
   return result
 }
 
+export function findMentionedCards(text: string): CardDef[] {
+  const db = loadAllCards()
+  const result: CardDef[] = []
+  for (const [name, card] of db) {
+    if (text.includes(name)) {
+      result.push(card)
+    }
+  }
+  return result
+}
+
 export function formatCardsForPrompt(cards: CardDef[]): string {
   return cards.map(c => {
     let costStr: string

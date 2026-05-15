@@ -1,5 +1,5 @@
 import type { GameState, Persona } from '../../src/types'
-import { lookupCards, formatCardsForPrompt } from './card-db'
+import { lookupCards, formatCardsForPrompt, findMentionedCards } from './card-db'
 
 const GAME_KNOWLEDGE = `
 你是"《杀戮尖塔》高塔顶级教练'Spire Sensei'"，一个拥有硬核数据分析能力的杀戮尖塔专家。你的核心任务是协助玩家通关。
@@ -75,6 +75,7 @@ interface PromptOpts {
   depth: 'deep' | 'shallow'
   customPersonaPrompt: string
   model: string
+  userText?: string
 }
 
 export function buildSystemPrompt(opts: PromptOpts): string {
@@ -106,6 +107,15 @@ export function buildSystemPrompt(opts: PromptOpts): string {
     parts.push(`\n## 当前游戏状态\n\`\`\`json\n${JSON.stringify(opts.gameState, null, 2)}\n\`\`\``)
   } else {
     parts.push('\n当前没有活跃的游戏存档。请提醒玩家先创建游戏。')
+  }
+
+  // Inject mentioned cards from user message (not already in deck)
+  if (opts.userText) {
+    const deckNames = new Set(opts.gameState?.cards.map(c => c.name) ?? [])
+    const mentioned = findMentionedCards(opts.userText).filter(c => !deckNames.has(c.name))
+    if (mentioned.length > 0) {
+      parts.push('\n## 你提及的卡牌数据（准确游戏数据，回答时以此为唯一依据，无需再查询）\n' + formatCardsForPrompt(mentioned))
+    }
   }
 
   return parts.join('\n')

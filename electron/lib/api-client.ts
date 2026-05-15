@@ -90,7 +90,8 @@ function buildMessages(opts: SendMessageOpts): BuildMessagesResult {
     persona,
     depth: opts.config.depth,
     customPersonaPrompt: opts.config.customPersonaPrompt,
-    model: opts.config.model
+    model: opts.config.model,
+    userText: opts.text
   })
 
   const messages: Array<{
