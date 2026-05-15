@@ -22,12 +22,11 @@ export function ChatPanel({ messages, sending, config, currentPath, onConfigChan
   useEffect(() => {
     const el = messageListRef.current
     if (!el) return
-    const justSent = messages.length > prevLenRef.current
-      && messages[messages.length - 1]?.role === 'user'
+    const hasNew = messages.length > prevLenRef.current
     prevLenRef.current = messages.length
 
     const isNearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 80
-    if (justSent || isNearBottom) {
+    if (hasNew || isNearBottom) {
       el.scrollTop = el.scrollHeight
     }
   }, [messages])

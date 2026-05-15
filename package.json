@@ -1,6 +1,6 @@
 {
   "name": "spire-sensei",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "Slay the Spire beginner guide client",
   "main": "dist-electron/main.js",
   "scripts": {

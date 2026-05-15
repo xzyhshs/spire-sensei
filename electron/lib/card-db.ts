@@ -2,6 +2,7 @@ import defectCards from '../../data/cards/故障机器人.json'
 import watcherCards from '../../data/cards/观者.json'
 import ironcladCards from '../../data/cards/铁甲战士.json'
 import silentCards from '../../data/cards/静默猎手.json'
+import colorlessCards from '../../data/cards/无色.json'
 
 export interface CardDef {
   name: string
@@ -23,6 +24,7 @@ function loadCardFiles(): CardDef[] {
     ...(watcherCards as CardDef[]),
     ...(ironcladCards as CardDef[]),
     ...(silentCards as CardDef[]),
+    ...(colorlessCards as CardDef[]),
   ]
 }
 
