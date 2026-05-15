@@ -3,13 +3,14 @@ import path from 'path'
 
 export interface CardDef {
   name: string
-  cost: number
+  cost: number | string
   type: '攻击' | '技能' | '能力' | '诅咒' | '状态'
-  rarity: '基础' | '普通' | '罕见' | '稀有' | '诅咒' | '状态'
+  rarity: string
   character: string
   effect: string
   costUpgraded?: number
   effectUpgraded?: string
+  upgrade?: string
 }
 
 let cardMap: Map<string, CardDef> | null = null
@@ -21,7 +22,10 @@ function dataDir(): string {
 
 function loadCardFiles(): CardDef[] {
   const dir = dataDir()
-  if (!fs.existsSync(dir)) return []
+  if (!fs.existsSync(dir)) {
+    console.log(`[card-db] Card data directory not found: ${dir}`)
+    return []
+  }
   const result: CardDef[] = []
   for (const file of fs.readdirSync(dir)) {
     if (!file.endsWith('.json')) continue
@@ -29,10 +33,11 @@ function loadCardFiles(): CardDef[] {
       const raw = fs.readFileSync(path.join(dir, file), 'utf-8')
       const cards = JSON.parse(raw) as CardDef[]
       result.push(...cards)
-    } catch {
-      // skip corrupt files
+    } catch (e) {
+      console.log(`[card-db] Failed to parse ${file}:`, e instanceof Error ? e.message : e)
     }
   }
+  console.log(`[card-db] Loaded ${result.length} cards from ${dir}`)
   return result
 }
 
@@ -57,10 +62,22 @@ export function lookupCards(names: string[]): CardDef[] {
 
 export function formatCardsForPrompt(cards: CardDef[]): string {
   return cards.map(c => {
-    const costStr = c.cost === -1 ? 'X' : String(c.cost)
-    const upgradeStr = c.costUpgraded !== undefined || c.effectUpgraded
-      ? ` 升级: ${c.costUpgraded !== undefined && c.costUpgraded !== c.cost ? `${c.costUpgraded === -1 ? 'X' : c.costUpgraded}费 ` : ''}${c.effectUpgraded || c.effect}`
-      : ''
-    return `- ${c.name} (${costStr}费 ${c.type}): ${c.effect}${upgradeStr ? '。' + upgradeStr : ''}`
+    let costStr: string
+    if (typeof c.cost === 'number') {
+      costStr = c.cost === -1 ? 'X' : String(c.cost)
+    } else {
+      costStr = c.cost
+    }
+    const costLabel = costStr === '不可打出' ? '不可打出' : `${costStr}费`
+
+    let upgradeStr = ''
+    if (c.upgrade) {
+      upgradeStr = ` 升级: ${c.upgrade}`
+    } else if (c.costUpgraded !== undefined || c.effectUpgraded) {
+      const oldCost = typeof c.cost === 'number' ? c.cost : 0
+      upgradeStr = ` 升级: ${c.costUpgraded !== undefined && c.costUpgraded !== oldCost ? `${c.costUpgraded === -1 ? 'X' : c.costUpgraded}费 ` : ''}${c.effectUpgraded || c.effect}`
+    }
+
+    return `- ${c.name} (${costLabel} ${c.type}): ${c.effect}${upgradeStr ? '。' + upgradeStr : ''}`
   }).join('\n')
 }

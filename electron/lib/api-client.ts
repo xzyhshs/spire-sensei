@@ -60,7 +60,7 @@ const LOOKUP_CARDS_TOOL = {
   type: 'function',
   function: {
     name: 'lookup_cards',
-    description: '查询卡牌准确数据（费用/类型/效果/升级效果）。讨论具体卡牌效果时必须先调用此工具，严禁凭记忆编造卡牌数据。',
+    description: '查询卡牌准确数据（费用/类型/效果/升级效果）。重要：涉及任何未在系统提示中出现的卡牌时，必须在回复前调用此工具获取准确数据。即使你认为自己记得该卡牌的效果，也必须通过此工具验证，因为记忆经常出错。严禁凭记忆编造卡牌效果。',
     parameters: {
       type: 'object',
       properties: {
