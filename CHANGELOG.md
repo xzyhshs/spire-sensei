@@ -10,6 +10,7 @@
 | DEFAULT_PERSONA 同步 4 级回复深度控制 | `electron/lib/context-builder.ts` |
 | 新增「上下文记忆」规则：追问时先回顾上文已有信息，严禁要求重复提供 | `data/character-prompts.ts`, `electron/lib/context-builder.ts` |
 | 修复 3 个历史遗留测试（英文→中文断言） | `tests/context-builder.test.ts` |
+| 创建 CHANGELOG.md 改动记录文档 | `CHANGELOG.md` |
 
 ## v0.2.7 — 2026-05-16
 
@@ -38,6 +39,7 @@
 | 删除药水 UI（按钮 + 状态徽章） | `Dashboard.tsx`, `ChatInput.tsx` |
 | 删除药水数据结构 | `types/index.ts`, `md-parser.ts`, `md-writer.ts`, `state-updater.ts` |
 | 删除 API 工具参数中的药水字段 | `api-client.ts` |
+| 测试文件同步移除药水引用 | `tests/md-parser.test.ts`, `tests/md-writer.test.ts`, `tests/state-updater.test.ts` |
 
 ## v0.2.4 — 2026-05-16
 
@@ -48,6 +50,64 @@
 | 4 角色初始卡组/遗物/生命值准确数据 | `data/characters.json` |
 | game-manager 基于角色数据生成模板 | `electron/lib/game-manager.ts` |
 
+## v0.2.3 — 2026-05-15
+
+**卡牌数据库 + 系统提示词强化**
+
+| 改动 | 涉及文件 |
+|------|------|
+| 5 套卡牌数据（铁甲/静默/观者/故障/无色） | `data/cards/*.json` |
+| card-db.ts 查询引擎 + lookup_cards 工具 | `electron/lib/card-db.ts`, `electron/lib/api-client.ts` |
+| 强制 lookup_cards 查询：禁止凭记忆回答卡牌效果 | `electron/lib/context-builder.ts` |
+| 自动注入对话中提及的卡牌数据 | `electron/lib/context-builder.ts`, `electron/lib/card-db.ts` |
+| 卡牌 JSON 打包进 JS（消除运行时 fs 依赖） | `electron/lib/card-db.ts` |
+| 观者卡牌数据修正 | `data/cards/观者.json` |
+| 版本标题回退兜底 | `electron/main.ts` |
+| 移除冲突的 HTML title 标签 | `src/index.html` |
+| 聊天自动滚动修复 | `src/components/Chat/ChatPanel.tsx` |
+
+## v0.2.2 — 2026-05-15
+
+**版本号显示 + 系统提示词上线**
+
+| 改动 | 涉及文件 |
+|------|------|
+| 窗口标题栏显示版本号 | `src/App.tsx`, `electron/main.ts` |
+| "高塔顶级教练"系统提示词 | `electron/lib/context-builder.ts` |
+| 存档聊天记录持久化 + 删除存档按钮 | `electron/lib/game-manager.ts`, `electron/main.ts` |
+| Dashboard 动画效果 | `src/components/Dashboard/Dashboard.tsx` |
+| 视觉自动更新层数/金币/血量（截图识别） | `electron/lib/context-builder.ts` |
+| 严格状态更新门禁：禁止从疑问句提取指令 | `electron/lib/context-builder.ts` |
+| 取消按钮 + 模式自动清除 + 纯中文 + 模型名称显示 + 滚动修复 | `src/components/Chat/ChatInput.tsx`, `src/hooks/useChat.ts` |
+
+## v0.2.0 — 2026-05-14
+
+**Function Calling 架构 + 首次打包**
+
+| 改动 | 涉及文件 |
+|------|------|
+| Function Calling 替代 Markdown 状态更新 | `electron/lib/api-client.ts` |
+| SSE 流式响应 + tool call 处理 | `electron/lib/api-client.ts`, `electron/main.ts` |
+| update_game_state 工具（卡牌/遗物/血量/金币增删改） | `electron/lib/state-updater.ts` |
+| Dashboard 中文化 + 分页 | `src/components/Dashboard/Dashboard.tsx`, `GameSelector.tsx` |
+| 多供应商/模型下拉 + 多厂商 API + DeepSeek V4 修复 | `src/components/Settings/ApiConfig.tsx`, `electron/lib/api-client.ts` |
+| 配置持久化（实时写入 + 启动加载） | `electron/main.ts` |
+| Personas 预设语气风格 | `src/components/Settings/SettingsDialog.tsx` |
+| electron-builder NSIS 打包 + 中文镜像 | `electron-builder.json`, `package.json` |
+
 ---
 
-> 早期版本（v0.2.0 → v0.2.3）的改动记录省略，详见 `git log 4ffd626..dba8e03`
+## v0.1.x — 2026-05-12 ~ 2026-05-14
+
+**项目开发阶段（Phase 1 → Phase 8）**
+
+| Phase | 内容 |
+|-------|------|
+| Phase 1 | 项目脚手架：Electron + React 18 + Vite 5 + TypeScript 5.5 |
+| Phase 2 | UI 设计：Dark Card Tavern 主题、AppLayout、Dashboard、ChatPanel |
+| Phase 3 | 数据层：MD Parser/Writer、State Updater、Context Builder、Game Manager |
+| Phase 4 | Dashboard 数据接入：IPC wrappers、useGameState hook、GameSelector |
+| Phase 5 | Chat 面板数据接入：useChat hook、config 状态、图片压缩 |
+| Phase 6 | AI 集成：API Client、IPC handlers、Settings dialog |
+| Phase 7 | 打磨与打包：default-config、personas、electron-builder、scripts |
+| Phase 8 | 多厂商 API：供应商/模型下拉、配置持久化、DeepSeek V4 图片修复 |
