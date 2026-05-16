@@ -118,13 +118,15 @@ export function buildSystemPrompt(opts: PromptOpts): string {
     if (opts.gameState.cards.length > 0) {
       const totalCards = opts.gameState.cards.reduce((sum, c) => sum + c.count, 0)
       const countMap = new Map<string, number>()
+      const upgradeMap = new Map<string, boolean>()
       for (const c of opts.gameState.cards) {
         countMap.set(c.name, c.count)
+        upgradeMap.set(c.name, c.upgraded)
       }
       const names = opts.gameState.cards.map(c => c.name)
       const cards = lookupCards(names)
       if (cards.length > 0) {
-        parts.push(`\n## 牌组卡牌数据（共${totalCards}张，以下为准确游戏数据，回答时以此为唯一依据）\n` + formatCardsForPrompt(cards, countMap))
+        parts.push(`\n## 牌组卡牌数据（共${totalCards}张，以下为准确游戏数据，回答时以此为唯一依据）\n` + formatCardsForPrompt(cards, countMap, upgradeMap))
       }
     }
     parts.push(`\n## 当前游戏状态\n\`\`\`json\n${JSON.stringify(opts.gameState, null, 2)}\n\`\`\``)

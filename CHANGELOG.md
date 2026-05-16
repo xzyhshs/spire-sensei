@@ -1,5 +1,14 @@
 # 改动记录
 
+## v0.3.3 — 2026-05-16
+
+**修复卡牌升级状态未显示（AI 搞错升级版本）**
+
+| 改动 | 涉及文件 |
+|------|------|
+| `formatCardsForPrompt` 支持显示升级状态：未升级显示两种效果，已升级标注 `[已升级]` 且只显示升级后效果 | `electron/lib/card-db.ts` |
+| context-builder 构建 upgradeMap 传入卡牌数据 | `electron/lib/context-builder.ts` |
+
 ## v0.3.2 — 2026-05-16
 
 **修复卡牌数量显示（AI 数错牌）**

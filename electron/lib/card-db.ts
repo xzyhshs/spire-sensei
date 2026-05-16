@@ -58,28 +58,41 @@ export function findMentionedCards(text: string): CardDef[] {
   return result
 }
 
-export function formatCardsForPrompt(cards: CardDef[], countMap?: Map<string, number>): string {
+export function formatCardsForPrompt(cards: CardDef[], countMap?: Map<string, number>, upgradeMap?: Map<string, boolean>): string {
   return cards.map(c => {
     const count = countMap?.get(c.name)
     const countStr = count !== undefined && count > 1 ? ` ×${count}` : ''
+    const upgraded = upgradeMap?.get(c.name) ?? false
 
     let costStr: string
-    if (typeof c.cost === 'number') {
-      costStr = c.cost === -1 ? 'X' : String(c.cost)
-    } else {
-      costStr = c.cost
-    }
-    const costLabel = costStr === '不可打出' ? '不可打出' : `${costStr}费`
-
+    let effectText: string
     let upgradeStr = ''
-    if (c.upgrade) {
-      upgradeStr = ` 升级: ${c.upgrade}`
-    } else if (c.costUpgraded !== undefined || c.effectUpgraded) {
-      const oldCost = typeof c.cost === 'number' ? c.cost : 0
-      upgradeStr = ` 升级: ${c.costUpgraded !== undefined && c.costUpgraded !== oldCost ? `${c.costUpgraded === -1 ? 'X' : c.costUpgraded}费 ` : ''}${c.effectUpgraded || c.effect}`
+
+    if (upgraded) {
+      // Show only upgraded state
+      const uc = c.costUpgraded !== undefined ? c.costUpgraded : (typeof c.cost === 'number' ? c.cost : 0)
+      costStr = uc === -1 ? 'X' : String(uc)
+      effectText = c.effectUpgraded || c.effect
+    } else {
+      // Show base effect with upgrade preview
+      if (typeof c.cost === 'number') {
+        costStr = c.cost === -1 ? 'X' : String(c.cost)
+      } else {
+        costStr = c.cost
+      }
+      effectText = c.effect
+
+      if (c.upgrade) {
+        upgradeStr = ` 升级: ${c.upgrade}`
+      } else if (c.costUpgraded !== undefined || c.effectUpgraded) {
+        const oldCost = typeof c.cost === 'number' ? c.cost : 0
+        upgradeStr = ` 升级: ${c.costUpgraded !== undefined && c.costUpgraded !== oldCost ? `${c.costUpgraded === -1 ? 'X' : c.costUpgraded}费 ` : ''}${c.effectUpgraded || c.effect}`
+      }
     }
 
-    const effectClean = c.effect.endsWith('。') ? c.effect.slice(0, -1) : c.effect
-    return `- ${c.name}${countStr} (${costLabel} ${c.type}): ${effectClean}${upgradeStr ? '。 ' + upgradeStr : ''}`
+    const costLabel = costStr === '不可打出' ? '不可打出' : `${costStr}费`
+    const upgradeTag = upgraded ? ' [已升级]' : ''
+    const effectClean = effectText.endsWith('。') ? effectText.slice(0, -1) : effectText
+    return `- ${c.name}${countStr} (${costLabel} ${c.type})${upgradeTag}: ${effectClean}${upgradeStr ? '。 ' + upgradeStr : ''}`
   }).join('\n')
 }
