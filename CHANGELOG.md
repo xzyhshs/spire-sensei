@@ -1,5 +1,14 @@
 # 改动记录
 
+## v0.2.9 — 2026-05-16
+
+**强化游戏状态感知**
+
+| 改动 | 涉及文件 |
+|------|------|
+| 游戏状态前加固化指令：必须先基于实际数据回答，而非通用理论 | `electron/lib/context-builder.ts` |
+| 观者、铁甲战士、DEFAULT_PERSONA 加点：回答策略问题前必须先检查当前游戏状态 | `data/character-prompts.ts`, `electron/lib/context-builder.ts` |
+
 ## v0.2.8 — 2026-05-16
 
 **回复深度控制 + 上下文记忆**

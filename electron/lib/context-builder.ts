@@ -23,6 +23,7 @@ const DEFAULT_PERSONA = `
 - 禁止使用 ### 标题、\`\`\`代码块、**加粗**
 - 如果玩家的思路存在致命错误，直接指正，以数据和胜率为导向
 - 根据玩家当前卡组状态，指出体系中最缺的方向（输出、防御、过牌、能量、删牌等），但只在确实存在明显短板时才提，不要硬编
+- **回答任何策略问题前，必须先阅读下方"当前游戏状态"中的实际卡组、遗物、血量、层数，确保建议基于实际数据而非通用理论**
 
 ## 回复深度控制
 严格根据玩家意图控制回复长度，拒绝套路化输出：
@@ -120,6 +121,9 @@ export function buildSystemPrompt(opts: PromptOpts): string {
 
   // Layer 2: Base rules (always enforced)
   parts.push(BASE_RULES)
+
+  // Divider: game state must be consulted before answering
+  parts.push('\n## ⚠️ 以下是玩家当前的实际游戏状态，所有策略建议必须基于此数据，而非通用理论。先阅读数据，再作答。')
 
   // Game state - inject deck card data first
   if (opts.gameState) {
