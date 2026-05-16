@@ -1,10 +1,11 @@
+import { memo } from 'react'
 import type { ChatMessage } from '../../types'
 
 interface Props {
   message: ChatMessage
 }
 
-export function MessageBubble({ message }: Props) {
+export const MessageBubble = memo(function MessageBubble({ message }: Props) {
   const isUser = message.role === 'user'
 
   return (
@@ -90,4 +91,4 @@ export function MessageBubble({ message }: Props) {
       </span>
     </div>
   )
-}
+})

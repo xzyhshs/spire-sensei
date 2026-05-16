@@ -21,6 +21,8 @@ export function useChat() {
   const [sending, setSending] = useState(false)
   const messagesRef = useRef<ChatMessage[]>([])
   messagesRef.current = messages
+  const pendingChunkRef = useRef('')
+  const rafPendingRef = useRef(false)
 
   const addMessage = useCallback((msg: ChatMessage) => {
     setMessages(prev => [...prev, msg])
@@ -47,15 +49,31 @@ export function useChat() {
     try {
       const result = await new Promise<GameState | null>((resolve) => {
         const unsubChunk = window.electronAPI.onStreamChunk((text) => {
-          setMessages(prev => prev.map(m =>
-            m.id === aiMsgId ? { ...m, text: m.text + text } : m
-          ))
+          pendingChunkRef.current += text
+          if (!rafPendingRef.current) {
+            rafPendingRef.current = true
+            requestAnimationFrame(() => {
+              const batch = pendingChunkRef.current
+              pendingChunkRef.current = ''
+              rafPendingRef.current = false
+              setMessages(prev => prev.map(m =>
+                m.id === aiMsgId ? { ...m, text: m.text + batch } : m
+              ))
+            })
+          }
         })
 
         const unsubDone = window.electronAPI.onStreamDone(({ gameState }) => {
           unsubChunk()
           unsubDone()
           unsubError()
+          if (pendingChunkRef.current) {
+            const batch = pendingChunkRef.current
+            pendingChunkRef.current = ''
+            setMessages(prev => prev.map(m =>
+              m.id === aiMsgId ? { ...m, text: m.text + batch } : m
+            ))
+          }
           resolve(gameState || null)
         })
 
@@ -92,7 +110,8 @@ export function useChat() {
 
   // Persistence helpers — use ref so callers always get the latest messages
   const saveChatHistory = useCallback(async (gamePath: string) => {
-    await ipc.saveChatHistory(gamePath, messagesRef.current)
+    const stripped = messagesRef.current.map(({ imageBase64, ...rest }) => rest as ChatMessage)
+    await ipc.saveChatHistory(gamePath, stripped)
   }, [])
 
   const loadChatHistory = useCallback(async (gamePath: string) => {

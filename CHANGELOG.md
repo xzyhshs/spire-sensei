@@ -1,5 +1,25 @@
 # 改动记录
 
+## v0.3.5 — 2026-05-16
+
+**修复 AI 选牌推荐不自检跳过（一边说别拿牌一边又推荐拿牌）**
+
+| 改动 | 涉及文件 |
+|------|------|
+| 删除"简洁回复"死规则（深度教学切换按钮已删，该规则却持续压制跳过建议） | `data/character-prompts.ts`, `electron/lib/context-builder.ts` |
+| 选牌结论逻辑改为「跳过优先」：先判断是否跳过，确定该拿才指名具体卡牌 | `data/character-prompts.ts` |
+| DEFAULT_PERSONA 新增「选牌决策铁律」：卡组臃肿或候选非核心引擎时建议跳过 | `electron/lib/context-builder.ts` |
+
+## v0.3.4 — 2026-05-16
+
+**修复发图片后输入框卡死（~1分钟无响应）**
+
+| 改动 | 涉及文件 |
+|------|------|
+| 聊天记录不再保存 base64 图片数据（减少 IPC 序列化体积，消除主线程阻塞） | `src/hooks/useChat.ts` |
+| MessageBubble 加 `React.memo`（避免未变化消息的无效重渲染） | `src/components/Chat/MessageBubble.tsx` |
+| 流式 chunk 更新节流（`requestAnimationFrame` 合并渲染，减少 setMessages 频率） | `src/hooks/useChat.ts` |
+
 ## v0.3.3 — 2026-05-16
 
 **修复卡牌升级状态未显示（AI 搞错升级版本）**
