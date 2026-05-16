@@ -79,18 +79,9 @@ const BASE_RULES = `
 - 如果 lookup_cards 返回"未找到匹配卡牌"，诚实告诉玩家数据不足，不要猜测
 `.trim()
 
-const DEPTH_DEEP = `
-教学深度：详细。提供完整的分析和推理过程，比较不同选项的优劣。复杂对比可以用表格辅助。
-`.trim()
-
-const DEPTH_SHALLOW = `
-教学深度：简洁。只给结论和关键理由，一两段话即可，不需要表格对比。
-`.trim()
-
 interface PromptOpts {
   gameState: GameState | null
   persona: Persona
-  depth: 'deep' | 'shallow'
   customPersonaPrompt: string
   model: string
   userText?: string
@@ -115,9 +106,6 @@ export function buildSystemPrompt(opts: PromptOpts): string {
   } else if (opts.persona.id !== 'default' && opts.persona.description) {
     parts.push(`额外语气要求：${opts.persona.description}`)
   }
-
-  // Depth
-  parts.push(`\n${opts.depth === 'deep' ? DEPTH_DEEP : DEPTH_SHALLOW}`)
 
   // Layer 2: Base rules (always enforced)
   parts.push(BASE_RULES)

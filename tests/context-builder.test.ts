@@ -13,7 +13,6 @@ describe('buildSystemPrompt', () => {
     const prompt = buildSystemPrompt({
       gameState,
       persona: { id: 'default', name: '默认', description: '', preset: true },
-      depth: 'deep',
       customPersonaPrompt: ''
     })
     expect(prompt).toContain('铁甲战士')
@@ -23,31 +22,10 @@ describe('buildSystemPrompt', () => {
     expect(prompt).toContain('痛楚印记')
   })
 
-  it('includes detail instruction for deep mode', () => {
-    const prompt = buildSystemPrompt({
-      gameState,
-      persona: { id: 'default', name: '默认', description: '', preset: true },
-      depth: 'deep',
-      customPersonaPrompt: ''
-    })
-    expect(prompt).toContain('详细')
-  })
-
-  it('includes brief instruction for shallow mode', () => {
-    const prompt = buildSystemPrompt({
-      gameState,
-      persona: { id: 'default', name: '默认', description: '', preset: true },
-      depth: 'shallow',
-      customPersonaPrompt: ''
-    })
-    expect(prompt).toContain('简洁')
-  })
-
   it('includes persona description', () => {
     const prompt = buildSystemPrompt({
       gameState,
       persona: { id: 'lbw', name: '卢本伟', description: '说话像卢本伟', preset: true },
-      depth: 'deep',
       customPersonaPrompt: ''
     })
     expect(prompt).toContain('说话像卢本伟')
@@ -57,7 +35,6 @@ describe('buildSystemPrompt', () => {
     const prompt = buildSystemPrompt({
       gameState: null,
       persona: { id: 'default', name: '默认', description: '', preset: true },
-      depth: 'deep',
       customPersonaPrompt: ''
     })
     expect(prompt).toContain('当前没有活跃的游戏存档')

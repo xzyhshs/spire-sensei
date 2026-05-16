@@ -11,7 +11,6 @@ const PERSONAS: Persona[] = [
 ]
 
 export function ChatToolbar({ config, onConfigChange, onOpenSettings }: Props) {
-  const depth = config?.depth || 'deep'
   const persona = config?.persona || 'default'
 
   return (
@@ -20,45 +19,6 @@ export function ChatToolbar({ config, onConfigChange, onOpenSettings }: Props) {
       alignItems: 'center',
       gap: '12px'
     }}>
-      {/* Depth toggle */}
-      <div style={{
-        display: 'flex',
-        borderRadius: 'var(--radius-md)',
-        overflow: 'hidden',
-        border: '1px solid var(--border-subtle)',
-        fontSize: '12px'
-      }}>
-        <button
-          onClick={() => onConfigChange?.({ depth: 'deep' })}
-          style={{
-            padding: '4px 12px',
-            border: 'none',
-            background: depth === 'deep' ? 'var(--gold-dark)' : 'transparent',
-            color: depth === 'deep' ? 'var(--bg-deep)' : 'var(--text-muted)',
-            cursor: 'pointer',
-            fontWeight: depth === 'deep' ? 600 : 400,
-            transition: 'all var(--transition-fast)'
-          }}
-        >
-          深度教学
-        </button>
-        <button
-          onClick={() => onConfigChange?.({ depth: 'shallow' })}
-          style={{
-            padding: '4px 12px',
-            border: 'none',
-            borderLeft: '1px solid var(--border-subtle)',
-            background: depth === 'shallow' ? 'var(--gold-dark)' : 'transparent',
-            color: depth === 'shallow' ? 'var(--bg-deep)' : 'var(--text-muted)',
-            cursor: 'pointer',
-            fontWeight: depth === 'shallow' ? 600 : 400,
-            transition: 'all var(--transition-fast)'
-          }}
-        >
-          学一点点
-        </button>
-      </div>
-
       {/* Persona selector */}
       <select
         value={persona}

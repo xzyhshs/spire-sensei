@@ -85,7 +85,6 @@ function buildMessages(opts: SendMessageOpts): BuildMessagesResult {
   const systemPrompt = buildSystemPrompt({
     gameState: opts.gameState,
     persona,
-    depth: opts.config.depth,
     customPersonaPrompt: opts.config.customPersonaPrompt,
     model: opts.config.model,
     userText: opts.text

@@ -37,7 +37,6 @@ export interface AppConfig {
   apiKey: string
   baseUrl: string
   model: string
-  depth: 'deep' | 'shallow'
   persona: string
   customPersonaPrompt: string
 }

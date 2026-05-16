@@ -1,5 +1,18 @@
 # 改动记录
 
+## v0.3.1 — 2026-05-16
+
+**移除深度教学切换功能**
+
+| 改动 | 涉及文件 |
+|------|------|
+| 删除 ChatToolbar "深度教学"/"学一点点" 按钮 | `src/components/Chat/ChatToolbar.tsx` |
+| 删除 `AppConfig.depth` 字段 | `src/types/index.ts` |
+| 删除 `DEFAULT_CONFIG.depth` | `src/App.tsx` |
+| 删除 `DEPTH_DEEP`/`DEPTH_SHALLOW` 常量和注入逻辑 | `electron/lib/context-builder.ts` |
+| 删除 config 构建中的 `depth` 字段 | `electron/main.ts`, `electron/lib/api-client.ts` |
+| 删除 2 个深度模式测试用例 | `tests/context-builder.test.ts` |
+
 ## v0.3.0 — 2026-05-16
 
 **修复 4 个 Prompt 冲突/瑕疵**

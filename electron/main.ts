@@ -82,7 +82,7 @@ function registerIpcHandlers() {
       apiKey: (mergedConfig.apiKey as string) || '',
       baseUrl: (mergedConfig.baseUrl as string) || 'https://api.deepseek.com/v1',
       model: (mergedConfig.model as string) || 'deepseek-v4-pro',
-      depth: (mergedConfig.depth as 'deep' | 'shallow') || 'deep',
+
       persona: (mergedConfig.persona as string) || 'default',
       customPersonaPrompt: (mergedConfig.customPersonaPrompt as string) || ''
     }
@@ -139,7 +139,7 @@ function registerIpcHandlers() {
       apiKey: (mergedConfig.apiKey as string) || '',
       baseUrl: (mergedConfig.baseUrl as string) || 'https://api.deepseek.com/v1',
       model: (mergedConfig.model as string) || 'deepseek-v4-pro',
-      depth: (mergedConfig.depth as 'deep' | 'shallow') || 'deep',
+
       persona: (mergedConfig.persona as string) || 'default',
       customPersonaPrompt: (mergedConfig.customPersonaPrompt as string) || ''
     }

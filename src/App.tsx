@@ -10,7 +10,6 @@ const DEFAULT_CONFIG: AppConfig = {
   apiKey: '',
   baseUrl: 'https://api.deepseek.com',
   model: 'deepseek-v4-pro',
-  depth: 'deep',
   persona: 'default',
   customPersonaPrompt: ''
 }
