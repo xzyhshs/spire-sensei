@@ -1,7 +1,18 @@
 import type { GameState, Persona } from '../../src/types'
 import { lookupCards, formatCardsForPrompt, findMentionedCards } from './card-db'
+import characterPrompts from '../../data/character-prompts'
 
-const GAME_KNOWLEDGE = `
+// ── Character prompt map ──
+
+const CHAR_PROMPT_MAP = new Map<string, string>(
+  (characterPrompts as Array<{ character: string; prompt: string }>)
+    .filter(c => c.prompt)
+    .map(c => [c.character, c.prompt])
+)
+
+// ── Default persona (fallback when no character-specific prompt) ──
+
+const DEFAULT_PERSONA = `
 你是"《杀戮尖塔》高塔顶级教练'Spire Sensei'"，一个拥有硬核数据分析能力的杀戮尖塔专家。你的核心任务是协助玩家通关。
 
 ## 回复风格
@@ -13,11 +24,18 @@ const GAME_KNOWLEDGE = `
 - 如果玩家的思路存在致命错误，直接指正，以数据和胜率为导向
 - 根据玩家当前卡组状态，指出体系中最缺的方向（输出、防御、过牌、能量、删牌等），但只在确实存在明显短板时才提，不要硬编
 
-## 回复组织
-- 根据玩家的问题自由组织回答，聚焦于玩家问的具体内容，不要每次回复都走固定模板
-- 玩家可能只问了一个具体问题（比如升级哪张牌），直接回答那个问题即可，不需要每次都扩展到路线规划、删牌建议等
+## 回复深度控制
+严格根据玩家意图控制回复长度，拒绝套路化输出：
+- **极简回复（执行 + 确认）**：玩家给出明确更新指令（"更新卡组""加一张XX""删了XX"等），直接执行 update_game_state，然后简短回复"已更新：加了XX，删了YY"即可，不扩展分析
+- **简洁回复（结论 + 理由）**：玩家问简单事实（卡牌效果、遗物价格、当前状态），或单一明确选择（升级哪张、选哪张牌），直接给结论和简短理由，不扩展路线/删牌建议
+- **完整分析**：玩家提供完整局面/截图并询问策略建议，或主动要求详细分析时，才展开多维度拆解
+- **截图但无明确问题**：简述观察到的关键局面（血量/层数/当前选项），问玩家想了解什么，不主动展开完整分析
 - 如果玩家提供了截图或描述了完整局面，你可以主动扩展分析维度
+`.trim()
 
+// ── Base rules (always applied regardless of character) ──
+
+const BASE_RULES = `
 ## 状态更新规则（严格限制）
 
 调用 update_game_state 函数的唯一条件：
@@ -77,21 +95,30 @@ interface PromptOpts {
 }
 
 export function buildSystemPrompt(opts: PromptOpts): string {
-  const parts: string[] = [GAME_KNOWLEDGE]
+  const parts: string[] = []
+
+  // Layer 1: Character-specific prompt (or default fallback)
+  const charPrompt = opts.gameState
+    ? CHAR_PROMPT_MAP.get(opts.gameState.character)
+    : undefined
+  parts.push(charPrompt || DEFAULT_PERSONA)
 
   // Model info
   parts.push(`当前模型：${opts.model}`)
   parts.push('如果用户问你是什么模型，准确回答这个模型名称。')
 
-  // Persona
+  // Persona override (from settings, additive on top of character prompt)
   if (opts.persona.id === 'custom' && opts.customPersonaPrompt) {
-    parts.push(`说话风格：${opts.customPersonaPrompt}`)
+    parts.push(`额外语气要求：${opts.customPersonaPrompt}`)
   } else if (opts.persona.id !== 'default' && opts.persona.description) {
-    parts.push(`说话风格：${opts.persona.description}`)
+    parts.push(`额外语气要求：${opts.persona.description}`)
   }
 
   // Depth
   parts.push(`\n${opts.depth === 'deep' ? DEPTH_DEEP : DEPTH_SHALLOW}`)
+
+  // Layer 2: Base rules (always enforced)
+  parts.push(BASE_RULES)
 
   // Game state - inject deck card data first
   if (opts.gameState) {

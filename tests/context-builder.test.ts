@@ -30,7 +30,7 @@ describe('buildSystemPrompt', () => {
       depth: 'deep',
       customPersonaPrompt: ''
     })
-    expect(prompt).toContain('DETAILED')
+    expect(prompt).toContain('详细')
   })
 
   it('includes brief instruction for shallow mode', () => {
@@ -40,7 +40,7 @@ describe('buildSystemPrompt', () => {
       depth: 'shallow',
       customPersonaPrompt: ''
     })
-    expect(prompt).toContain('SHORT')
+    expect(prompt).toContain('简洁')
   })
 
   it('includes persona description', () => {
@@ -60,6 +60,6 @@ describe('buildSystemPrompt', () => {
       depth: 'deep',
       customPersonaPrompt: ''
     })
-    expect(prompt).toContain('No active game')
+    expect(prompt).toContain('当前没有活跃的游戏存档')
   })
 })
