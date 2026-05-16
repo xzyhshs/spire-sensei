@@ -10,7 +10,6 @@ interface Props {
 const MODES = [
   { key: 'cards', label: '更新卡组' },
   { key: 'relics', label: '更新遗物' },
-  { key: 'potions', label: '更新药水' },
   { key: 'stats', label: '更新状态' }
 ]
 

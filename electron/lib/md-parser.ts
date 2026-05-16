@@ -17,7 +17,6 @@ export function parseGameMd(content: string): GameState {
     updated: yaml.updated || '',
     cards: parseCards(body),
     relics: parseSection(body, '遗物'),
-    potions: parseSection(body, '药水'),
     options: parseOptions(body)
   }
 }

@@ -15,9 +15,6 @@ interface StateUpdate {
   addRelics?: string[]
   removeRelics?: string[]
   clearRelics?: boolean
-  addPotions?: string[]
-  removePotions?: string[]
-  clearPotions?: boolean
   clearCards?: boolean
   options?: string
   clearOptions?: boolean
@@ -82,19 +79,6 @@ export function applyStateUpdate(mdContent: string, update: StateUpdate): string
   }
   if (update.removeRelics) {
     state.relics = state.relics.filter(r => !update.removeRelics!.includes(r))
-  }
-
-  // Potions
-  if (update.clearPotions) {
-    state.potions = []
-  }
-  if (update.addPotions) {
-    for (const name of update.addPotions) {
-      if (!state.potions.includes(name)) state.potions.push(name)
-    }
-  }
-  if (update.removePotions) {
-    state.potions = state.potions.filter(p => !update.removePotions!.includes(p))
   }
 
   // Options

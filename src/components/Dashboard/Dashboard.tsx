@@ -147,13 +147,6 @@ function RelicItem({ name, isNew }: { name: string; isNew: boolean }) {
   )
 }
 
-function PotionBadge({ name, isNew }: { name: string; isNew: boolean }) {
-  return (
-    <span className="badge badge-gold" style={{
-      animation: isNew ? 'dashSlideIn 0.35s ease-out' : 'none'
-    }}>{name}</span>
-  )
-}
 
 export function Dashboard({ gameState, currentPath, savedGames, loading, onCreateGame, onSwitchGame, onDeleteGame }: Props) {
   const prevRef = useRef<GameState | null>(null)
@@ -179,10 +172,6 @@ export function Dashboard({ gameState, currentPath, savedGames, loading, onCreat
 
   const newRelics = gameState && prev
     ? new Set(gameState.relics.filter(r => !prev.relics.includes(r)))
-    : new Set<string>()
-
-  const newPotions = gameState && prev
-    ? new Set(gameState.potions.filter(p => !prev.potions.includes(p)))
     : new Set<string>()
 
   return (
@@ -238,19 +227,6 @@ export function Dashboard({ gameState, currentPath, savedGames, loading, onCreat
           <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
             {gameState.relics.map((relic) => (
               <RelicItem key={`${relic}-${getEpoch(relic, newRelics.has(relic))}`} name={relic} isNew={newRelics.has(relic)} />
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Potions */}
-      {gameState.potions.length > 0 && (
-        <div className="panel-card" style={{ padding: '16px', marginBottom: '16px' }}>
-          <div className="section-title">药水 ({gameState.potions.length})</div>
-          <div className="gold-divider" />
-          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-            {gameState.potions.map((p) => (
-              <PotionBadge key={`${p}-${getEpoch(p, newPotions.has(p))}`} name={p} isNew={newPotions.has(p)} />
             ))}
           </div>
         </div>

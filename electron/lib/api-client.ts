@@ -28,7 +28,7 @@ const STATE_UPDATE_TOOL = {
   type: 'function',
   function: {
     name: 'update_game_state',
-    description: '更新杀戮尖塔游戏状态。调用条件：1) 用户发送截图时可自动识别层数/金币/生命值并更新（仅这三项可自动更新），2) 用户消息带【更新卡组/遗物/药水/状态】标签或明确说"更新XX"时更新对应字段，3) 用户明确要求修改具体数据时。卡组/遗物/药水严禁自动更新。严禁从疑问句、反问句、确认性提问中提取指令，只有明确的指令性语句才触发更新。只传需要变更的字段。',
+    description: '更新杀戮尖塔游戏状态。调用条件：1) 用户发送截图时可自动识别层数/金币/生命值并更新（仅这三项可自动更新），2) 用户消息带【更新卡组/遗物/状态】标签或明确说"更新XX"时更新对应字段，3) 用户明确要求修改具体数据时。卡组/遗物严禁自动更新。严禁从疑问句、反问句、确认性提问中提取指令，只有明确的指令性语句才触发更新。只传需要变更的字段。',
     parameters: {
       type: 'object',
       properties: {
@@ -46,9 +46,6 @@ const STATE_UPDATE_TOOL = {
         addRelics: { type: 'array', items: { type: 'string' }, description: '添加的遗物。如"获得了开心小花"→["开心小花"]' },
         removeRelics: { type: 'array', items: { type: 'string' }, description: '移除的遗物。如"删掉开心小花"→["开心小花"]' },
         clearRelics: { type: 'boolean', description: '清空所有遗物。如"我没有遗物了""遗物全没了""清空遗物"' },
-        addPotions: { type: 'array', items: { type: 'string' }, description: '添加的药水。如"获得爆炸药水"→["爆炸药水"]' },
-        removePotions: { type: 'array', items: { type: 'string' }, description: '移除的药水。如"用掉爆炸药水"→["爆炸药水"]' },
-        clearPotions: { type: 'boolean', description: '清空所有药水。如"药水全用完了""没有药水了"' },
         options: { type: 'string', description: '当前选项内容' },
         clearOptions: { type: 'boolean', description: '是否清空当前选项' }
       }

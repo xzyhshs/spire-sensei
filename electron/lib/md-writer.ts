@@ -33,13 +33,6 @@ export function writeGameMd(state: GameState): string {
   }
   lines.push('')
 
-  // Potions
-  lines.push(`# 药水 (${state.potions.length})`)
-  for (const potion of state.potions) {
-    lines.push(`- ${potion}`)
-  }
-  lines.push('')
-
   // Current options
   lines.push('# 当前选项')
   if (state.options) {

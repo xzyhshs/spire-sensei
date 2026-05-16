@@ -12,7 +12,6 @@ describe('applyStateUpdate', () => {
       { name: '防御', upgraded: false, count: 4 }
     ],
     relics: ['痛楚印记'],
-    potions: [],
     options: '抓牌: 燃烧 / 双发 / 震波'
   }
 

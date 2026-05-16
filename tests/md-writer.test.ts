@@ -16,7 +16,6 @@ const sampleState = {
     { name: '燃烧', upgraded: false, count: 1 }
   ],
   relics: ['痛楚印记', '皇家枕套'],
-  potions: ['格挡药水'],
   options: '选择路线: 精英 / 篝火 / 商店'
 }
 
@@ -36,11 +35,10 @@ describe('writeGameMd', () => {
     expect(md).toContain('- [ ] 燃烧')
   })
 
-  it('writes relics and potions sections', () => {
+  it('writes relics section', () => {
     const md = writeGameMd(sampleState)
     expect(md).toContain('# 遗物 (2)')
     expect(md).toContain('- 痛楚印记')
-    expect(md).toContain('# 药水 (1)')
   })
 
   it('writes current options section', () => {

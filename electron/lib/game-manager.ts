@@ -3,37 +3,54 @@ import path from 'path'
 import { parseGameMd } from './md-parser'
 import { writeGameMd } from './md-writer'
 import type { GameState } from '../../src/types'
+import characters from '../../data/characters.json'
 
-const GAME_TEMPLATE = `---
-character: {CHARACTER}
+interface CharacterDef {
+  id: string
+  english_name: string
+  maxHp: number
+  starting_deck: Array<{ name: string; count: number }>
+  starting_relic: { name: string; english_name: string; effect: string }
+}
+
+const CHAR_MAP = new Map<string, CharacterDef>(
+  (characters as CharacterDef[]).map(c => [c.id, c])
+)
+
+function buildGameContent(character: string, now: string): string {
+  const ch = CHAR_MAP.get(character)
+  if (!ch) throw new Error(`未知角色: ${character}`)
+
+  const cardLines = ch.starting_deck.map(
+    c => `- [ ] ${c.name}${c.count > 1 ? ` x${c.count}` : ''}`
+  )
+  const cardCount = ch.starting_deck.reduce((sum, c) => sum + c.count, 0)
+
+  return `---
+character: ${character}
 floor: 1
-hp: 72/72
+hp: ${ch.maxHp}/${ch.maxHp}
 gold: 99
 act: 1
-created: {CREATED}
-updated: {CREATED}
+created: ${now}
+updated: ${now}
 ---
 
-# 卡组 (10)
-- [ ] 打击 x5
-- [ ] 防御 x4
-- [x] 痛击+ x1
+# 卡组 (${cardCount})
+${cardLines.join('\n')}
 
 # 遗物 (1)
-- 痛楚印记
-
-# 药水 (0)
+- ${ch.starting_relic.name}
 
 # 当前选项
 `
+}
 
 export function createGame(character: string, gamesDir: string): string {
   const now = new Date().toISOString()
   const filename = `${character}-${now.replace(/[:.]/g, '-').slice(0, 19)}.md`
   const filePath = path.join(gamesDir, filename)
-  const content = GAME_TEMPLATE
-    .replace(/{CHARACTER}/g, character)
-    .replace(/{CREATED}/g, now)
+  const content = buildGameContent(character, now)
   fs.writeFileSync(filePath, content, 'utf-8')
   return filePath
 }

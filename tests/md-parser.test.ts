@@ -21,9 +21,6 @@ updated: 2026-05-13T21:15:00+08:00
 - 痛楚印记
 - 皇家枕套
 
-# 药水 (2)
-- 格挡药水
-
 # 当前选项
 - 抓牌: 燃烧 / 双发 / 震波
 `
@@ -48,11 +45,6 @@ describe('parseGameMd', () => {
   it('parses relics', () => {
     const result = parseGameMd(sampleMd)
     expect(result.relics).toEqual(['痛楚印记', '皇家枕套'])
-  })
-
-  it('parses potions', () => {
-    const result = parseGameMd(sampleMd)
-    expect(result.potions).toEqual(['格挡药水'])
   })
 
   it('parses current options', () => {
