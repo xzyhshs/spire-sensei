@@ -76,6 +76,7 @@ export function formatCardsForPrompt(cards: CardDef[]): string {
       upgradeStr = ` 升级: ${c.costUpgraded !== undefined && c.costUpgraded !== oldCost ? `${c.costUpgraded === -1 ? 'X' : c.costUpgraded}费 ` : ''}${c.effectUpgraded || c.effect}`
     }
 
-    return `- ${c.name} (${costLabel} ${c.type}): ${c.effect}${upgradeStr ? '。' + upgradeStr : ''}`
+    const effectClean = c.effect.endsWith('。') ? c.effect.slice(0, -1) : c.effect
+    return `- ${c.name} (${costLabel} ${c.type}): ${effectClean}${upgradeStr ? '。 ' + upgradeStr : ''}`
   }).join('\n')
 }
