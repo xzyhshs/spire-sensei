@@ -116,10 +116,15 @@ export function buildSystemPrompt(opts: PromptOpts): string {
   // Game state - inject deck card data first
   if (opts.gameState) {
     if (opts.gameState.cards.length > 0) {
+      const totalCards = opts.gameState.cards.reduce((sum, c) => sum + c.count, 0)
+      const countMap = new Map<string, number>()
+      for (const c of opts.gameState.cards) {
+        countMap.set(c.name, c.count)
+      }
       const names = opts.gameState.cards.map(c => c.name)
       const cards = lookupCards(names)
       if (cards.length > 0) {
-        parts.push('\n## 牌组卡牌数据（以下为准确游戏数据，回答时以此为唯一依据）\n' + formatCardsForPrompt(cards))
+        parts.push(`\n## 牌组卡牌数据（共${totalCards}张，以下为准确游戏数据，回答时以此为唯一依据）\n` + formatCardsForPrompt(cards, countMap))
       }
     }
     parts.push(`\n## 当前游戏状态\n\`\`\`json\n${JSON.stringify(opts.gameState, null, 2)}\n\`\`\``)

@@ -58,8 +58,11 @@ export function findMentionedCards(text: string): CardDef[] {
   return result
 }
 
-export function formatCardsForPrompt(cards: CardDef[]): string {
+export function formatCardsForPrompt(cards: CardDef[], countMap?: Map<string, number>): string {
   return cards.map(c => {
+    const count = countMap?.get(c.name)
+    const countStr = count !== undefined && count > 1 ? ` ×${count}` : ''
+
     let costStr: string
     if (typeof c.cost === 'number') {
       costStr = c.cost === -1 ? 'X' : String(c.cost)
@@ -77,6 +80,6 @@ export function formatCardsForPrompt(cards: CardDef[]): string {
     }
 
     const effectClean = c.effect.endsWith('。') ? c.effect.slice(0, -1) : c.effect
-    return `- ${c.name} (${costLabel} ${c.type}): ${effectClean}${upgradeStr ? '。 ' + upgradeStr : ''}`
+    return `- ${c.name}${countStr} (${costLabel} ${c.type}): ${effectClean}${upgradeStr ? '。 ' + upgradeStr : ''}`
   }).join('\n')
 }
