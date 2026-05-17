@@ -26,27 +26,17 @@ export function useGameState() {
   }, [])
 
   const createGame = useCallback(async (character: string) => {
-    setLoading(true)
-    try {
-      const path = await ipc.createGameFile(character)
-      const state = await ipc.readGameFile(path)
-      setCurrentPath(path)
-      setGameState(state)
-      await refreshSavedGames()
-    } finally {
-      setLoading(false)
-    }
+    const path = await ipc.createGameFile(character)
+    const state = await ipc.readGameFile(path)
+    setCurrentPath(path)
+    setGameState(state)
+    await refreshSavedGames()
   }, [refreshSavedGames])
 
   const switchGame = useCallback(async (path: string) => {
-    setLoading(true)
-    try {
-      const state = await ipc.readGameFile(path)
-      setCurrentPath(path)
-      setGameState(state)
-    } finally {
-      setLoading(false)
-    }
+    const state = await ipc.readGameFile(path)
+    setCurrentPath(path)
+    setGameState(state)
   }, [])
 
   const updateGameState = useCallback((state: GameState) => {
@@ -73,6 +63,7 @@ export function useGameState() {
     currentPath,
     savedGames,
     loading,
+    setLoading,
     refreshSavedGames,
     createGame,
     switchGame,

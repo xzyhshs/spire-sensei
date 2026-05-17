@@ -11,8 +11,7 @@ describe('applyStateUpdate', () => {
       { name: '打击', upgraded: false, count: 4 },
       { name: '防御', upgraded: false, count: 4 }
     ],
-    relics: ['痛楚印记'],
-    options: '抓牌: 燃烧 / 双发 / 震波'
+    relics: ['痛楚印记']
   }
 
   it('updates scalar fields (hp, gold, floor)', () => {
@@ -50,20 +49,13 @@ describe('applyStateUpdate', () => {
     expect(strike.upgraded).toBe(true)
   })
 
-  it('clears options after update', () => {
-    const md = writeGameMd(baseState)
-    const update = { clearOptions: true }
-    const updated = applyStateUpdate(md, update)
-    const parsed = parseGameMd(updated)
-    expect(parsed.options).toBe('')
-  })
 })
 
 describe('extractStateJson', () => {
   it('extracts state JSON from AI response text', () => {
-    const aiResponse = 'I recommend taking 燃烧.\n\n```json state\n{"addCards":["燃烧"],"clearOptions":true}\n```\n\nGood luck!'
+    const aiResponse = 'I recommend taking 燃烧.\n\n```json state\n{"addCards":["燃烧"]}\n```\n\nGood luck!'
     const json = extractStateJson(aiResponse)
-    expect(json).toEqual({ addCards: ['燃烧'], clearOptions: true })
+    expect(json).toEqual({ addCards: ['燃烧'] })
   })
 
   it('returns null when no state JSON present', () => {

@@ -8,6 +8,29 @@ const PERSONAS = [
 
 export { PERSONAS }
 
+// ── Fast-path: detect pure update commands ──
+
+const UPDATE_PATTERNS = [
+  /^[+\-]\d+\s*\S/,           // +1 停顿, -2 防御
+  /^[+\-]\S/,                  // +停顿, -防御
+  /^(加|删|添加|移除|删除)\s*(\d+\s*[张个]?\s*)?\S/,  // 加一张打击, 删2张防御
+  /^(升级|降级)\s*\S/,         // 升级暴怒, 降级痛击
+  /^获得\s*\S/,                // 获得开心小花
+  /^(加遗物|删遗物)\s*\S/,     // 加遗物开心小花
+  /^(更新卡组|更新遗物|更新状态|【更新卡组】|【更新遗物】|【更新状态】)/,
+  /^(血量|生命|hp|HP)\s*[=:：]?\s*\d+/,   // 血量=30, hp 50
+  /^(金币|gold)\s*[=:：]?\s*\d+/,         // 金币=200, gold 300
+  /^(层数|floor)\s*[=:：]?\s*\d+/,        // 层数=5, floor 10
+  /^(回满血|清空卡组|清空遗物)/,           // 回满血, 清空卡组
+]
+
+function isUpdateCommand(text: string, hasImages: boolean): boolean {
+  if (hasImages) return false
+  const trimmed = text.trim()
+  if (!trimmed) return false
+  return UPDATE_PATTERNS.some(p => p.test(trimmed))
+}
+
 interface SendOpts {
   text: string
   imageBase64?: string[]
@@ -29,6 +52,7 @@ export function useChat() {
   const waitingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const charCountRef = useRef(0)
   const firstChunkRef = useRef(false)
+  const streamResolverRef = useRef<((value: GameState | null) => void) | null>(null)
 
   const clearPhaseTimer = useCallback(() => {
     if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null }
@@ -61,6 +85,25 @@ export function useChat() {
     charCountRef.current = 0
     firstChunkRef.current = false
 
+    // Fast-path: pure update commands skip streaming entirely
+    if (isUpdateCommand(opts.text, (opts.imageBase64?.length ?? 0) > 0)) {
+      try {
+        setSendingPhase('sending')
+        const res = await window.electronAPI.sendUpdateCommand({
+          text: opts.text,
+          config: opts.config,
+          gamePath: opts.gamePath
+        })
+        setMessages(prev => prev.map(m =>
+          m.id === aiMsgId ? { ...m, text: res.reply } : m
+        ))
+        return res.gameState
+      } finally {
+        clearPhaseTimer()
+        setSendingPhase('idle')
+      }
+    }
+
     const startTime = Date.now()
 
     // Elapsed time timer
@@ -77,6 +120,7 @@ export function useChat() {
 
     try {
       const result = await new Promise<GameState | null>((resolve) => {
+        streamResolverRef.current = resolve
         const unsubChunk = window.electronAPI.onStreamChunk((text) => {
           if (!firstChunkRef.current) {
             firstChunkRef.current = true
@@ -100,7 +144,7 @@ export function useChat() {
 
         const unsubToolExecuting = window.electronAPI.onToolExecuting((label) => {
           setSendingPhase('tool-executing')
-          // Tool label is stored but simple phase is enough for now
+          firstChunkRef.current = false
           void label
         })
 
@@ -135,6 +179,11 @@ export function useChat() {
           imageBase64: opts.imageBase64,
           config: opts.config,
           gamePath: opts.gamePath
+        }).catch(() => {
+          setMessages(prev => prev.map(m =>
+            m.id === aiMsgId ? { ...m, text: 'API 请求失败：服务异常' } : m
+          ))
+          streamResolverRef.current?.(null)
         })
       })
 

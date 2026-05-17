@@ -5,7 +5,7 @@ const gameState = {
   character: '铁甲战士', floor: 12, hp: '45/72', gold: 188, act: 2,
   created: '', updated: '',
   cards: [{ name: '打击', upgraded: false, count: 4 }, { name: '痛击', upgraded: true, count: 1 }],
-  relics: ['痛楚印记'], options: '抓牌: 燃烧 / 双发 / 震波'
+  relics: ['痛楚印记']
 }
 
 describe('buildSystemPrompt', () => {

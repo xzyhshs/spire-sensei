@@ -16,8 +16,6 @@ interface StateUpdate {
   removeRelics?: string[]
   clearRelics?: boolean
   clearCards?: boolean
-  options?: string
-  clearOptions?: boolean
 }
 
 export function applyStateUpdate(mdContent: string, update: StateUpdate): string {
@@ -79,13 +77,6 @@ export function applyStateUpdate(mdContent: string, update: StateUpdate): string
   }
   if (update.removeRelics) {
     state.relics = state.relics.filter(r => !update.removeRelics!.includes(r))
-  }
-
-  // Options
-  if (update.clearOptions) {
-    state.options = ''
-  } else if (update.options) {
-    state.options = update.options
   }
 
   state.updated = new Date().toISOString()

@@ -1,4 +1,4 @@
-import { buildSystemPrompt } from './context-builder'
+import { buildSystemPrompt, buildMinimalUpdatePrompt } from './context-builder'
 import { applyStateUpdate } from './state-updater'
 import { readGame } from './game-manager'
 import { lookupCards, formatCardsForPrompt } from './card-db'
@@ -45,9 +45,7 @@ const STATE_UPDATE_TOOL = {
         clearCards: { type: 'boolean', description: '清空所有卡牌。如"卡组全删了""清空卡组"' },
         addRelics: { type: 'array', items: { type: 'string' }, description: '添加的遗物。如"获得了开心小花"→["开心小花"]' },
         removeRelics: { type: 'array', items: { type: 'string' }, description: '移除的遗物。如"删掉开心小花"→["开心小花"]' },
-        clearRelics: { type: 'boolean', description: '清空所有遗物。如"我没有遗物了""遗物全没了""清空遗物"' },
-        options: { type: 'string', description: '当前选项内容' },
-        clearOptions: { type: 'boolean', description: '是否清空当前选项' }
+        clearRelics: { type: 'boolean', description: '清空所有遗物。如"我没有遗物了""遗物全没了""清空遗物"' }
       }
     }
   }
@@ -382,6 +380,17 @@ export async function sendMessageStream(
         msgArr.push({ role: 'tool', tool_call_id: tc.id, content: '状态已更新' })
       }
 
+      // ── Strip image from user message before Round 2 (already processed in Round 1) ──
+      const userMsg = msgArr[1] as Record<string, unknown>
+      if (Array.isArray(userMsg.content)) {
+        const textParts = (userMsg.content as Array<Record<string, unknown>>).filter(
+          (p: Record<string, unknown>) => p.type === 'text'
+        )
+        userMsg.content = textParts.length > 0
+          ? textParts
+          : [{ type: 'text', text: '请分析' }]
+      }
+
       // ── Round 2 ──
       response = await fetch(apiUrl, {
         method: 'POST',
@@ -430,5 +439,106 @@ export async function sendMessageStream(
     callbacks.onError(err instanceof Error ? err : new Error(String(err)))
   } finally {
     if (timeout) clearTimeout(timeout)
+  }
+}
+
+// ── Fast-path for pure update commands ──
+
+function summarizeUpdate(update: Record<string, unknown>): string {
+  const parts: string[] = []
+  if (update.addCards) parts.push(`已添加 ${(update.addCards as string[]).join('、')}`)
+  if (update.removeCards) parts.push(`已移除 ${(update.removeCards as string[]).join('、')}`)
+  if (update.upgradeCards) parts.push(`已升级 ${(update.upgradeCards as string[]).join('、')}`)
+  if (update.downgradeCards) parts.push(`已撤销升级 ${(update.downgradeCards as string[]).join('、')}`)
+  if (update.clearCards) parts.push('已清空卡组')
+  if (update.addRelics) parts.push(`已添加遗物 ${(update.addRelics as string[]).join('、')}`)
+  if (update.removeRelics) parts.push(`已移除遗物 ${(update.removeRelics as string[]).join('、')}`)
+  if (update.clearRelics) parts.push('已清空遗物')
+  if (update.currentHp !== undefined || update.maxHp !== undefined) parts.push('已更新生命值')
+  else if (update.hp) parts.push(`已更新生命值 ${update.hp}`)
+  if (update.floor) parts.push(`已更新层数 ${update.floor}`)
+  if (update.gold !== undefined) parts.push(`已更新金币 ${update.gold}`)
+  if (update.act) parts.push(`已更新幕数 ${update.act}`)
+  return parts.length > 0 ? parts.join('，') : '状态已更新'
+}
+
+export async function sendUpdateCommand(opts: SendMessageOpts): Promise<{
+  reply: string
+  stateUpdated: boolean
+}> {
+  const systemPrompt = buildMinimalUpdatePrompt(opts.gameState, opts.text)
+
+  const messages: Array<{ role: string; content: string }> = [
+    { role: 'system', content: systemPrompt },
+    { role: 'user', content: opts.text }
+  ]
+
+  let base = opts.config.baseUrl.replace(/\/+$/, '')
+  if (/\/v\d+$/.test(base) || /\/api\/paas\/v\d+$/.test(base)) {
+    base = `${base}/chat/completions`
+  } else if (!base.endsWith('/chat/completions')) {
+    base = `${base}/chat/completions`
+  }
+
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), 30000)
+
+  try {
+    const response = await fetch(base, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${opts.config.apiKey}`
+      },
+      body: JSON.stringify({
+        model: opts.config.model,
+        messages,
+        max_tokens: 200,
+        tools: [STATE_UPDATE_TOOL],
+        tool_choice: { type: 'function', function: { name: 'update_game_state' } }
+      }),
+      signal: controller.signal
+    })
+
+    if (!response.ok) {
+      const err = await response.text()
+      return { reply: `更新失败：${err}`, stateUpdated: false }
+    }
+
+    const data = await response.json()
+    const msg = data.choices?.[0]?.message
+    const tcs = msg?.tool_calls
+
+    if (!tcs || tcs.length === 0) {
+      return { reply: '更新失败：AI 未执行更新', stateUpdated: false }
+    }
+
+    const stateCall = tcs.find((tc: Record<string, unknown>) =>
+      (tc.function as Record<string, string>)?.name === 'update_game_state'
+    )
+    if (!stateCall) {
+      return { reply: '更新失败：AI 未调用更新工具', stateUpdated: false }
+    }
+
+    let update: Record<string, unknown> = {}
+    try {
+      update = JSON.parse((stateCall.function as Record<string, string>)?.arguments || '{}')
+    } catch {
+      return { reply: '更新失败：工具参数解析错误', stateUpdated: false }
+    }
+
+    let stateUpdated = false
+    if (opts.gameFilePath && opts.gameState) {
+      const rawMd = fs.readFileSync(opts.gameFilePath, 'utf-8')
+      const updatedMd = applyStateUpdate(rawMd, update)
+      fs.writeFileSync(opts.gameFilePath, updatedMd, 'utf-8')
+      stateUpdated = true
+      console.log('[api-client] Fast-path update:', JSON.stringify(update))
+    }
+
+    const reply = summarizeUpdate(update)
+    return { reply, stateUpdated }
+  } finally {
+    clearTimeout(timeout)
   }
 }

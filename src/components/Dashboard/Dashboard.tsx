@@ -232,35 +232,6 @@ export function Dashboard({ gameState, currentPath, savedGames, loading, onCreat
         </div>
       )}
 
-      {/* Options */}
-      <div className="panel-card gold-border" style={{ padding: '16px', marginBottom: '16px' }}>
-        <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', marginBottom: '8px' }}>
-          <span style={{ fontSize: '18px', lineHeight: 1, marginTop: '1px' }}>🎯</span>
-          <div style={{ flex: 1 }}>
-            <div className="section-title" style={{ marginBottom: '2px' }}>当前选项</div>
-            <div style={{ fontSize: '10px', color: 'var(--text-muted)', lineHeight: 1.5 }}>
-              截图或描述当前面临的抉择，Sensei 帮你分析最佳方案
-            </div>
-          </div>
-        </div>
-        <div className="gold-divider" />
-        {gameState.options ? (
-          <div style={{
-            fontSize: '13px', color: 'var(--text-primary)',
-            whiteSpace: 'pre-wrap', lineHeight: 1.6, marginTop: '8px'
-          }}>
-            {gameState.options}
-          </div>
-        ) : (
-          <div style={{
-            fontSize: '12px', color: 'var(--text-muted)',
-            textAlign: 'center', padding: '14px 8px 4px',
-            fontStyle: 'italic'
-          }}>
-            暂未记录选项 — 发送截图自动识别，或用"更新状态"手动录入
-          </div>
-        )}
-      </div>
       </>
       )}
     </div>

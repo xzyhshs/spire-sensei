@@ -16,8 +16,7 @@ export function parseGameMd(content: string): GameState {
     created: yaml.created || '',
     updated: yaml.updated || '',
     cards: parseCards(body),
-    relics: parseSection(body, '遗物'),
-    options: parseOptions(body)
+    relics: parseSection(body, '遗物')
   }
 }
 
@@ -55,15 +54,6 @@ function parseSection(body: string, heading: string): string[] {
   return section.split('\n')
     .filter(line => line.startsWith('- '))
     .map(line => line.slice(2).trim())
-}
-
-function parseOptions(body: string): string {
-  const section = extractSection(body, '当前选项')
-  if (!section) return ''
-  return section.split('\n')
-    .filter(line => line.startsWith('- '))
-    .map(line => line.slice(2).trim())
-    .join('\n')
 }
 
 function extractSection(body: string, heading: string): string | null {

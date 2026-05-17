@@ -8,7 +8,6 @@ export interface GameState {
   updated: string
   cards: Card[]
   relics: string[]
-  options: string
 }
 
 export interface Card {

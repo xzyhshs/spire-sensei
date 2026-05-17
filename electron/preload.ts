@@ -32,6 +32,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
     return () => { ipcRenderer.removeListener('api:tool-executing', h) }
   },
   cancelMessage: () => ipcRenderer.invoke('api:cancel'),
+  sendUpdateCommand: (opts: { text: string; config?: Record<string, unknown>; gamePath?: string | null }) =>
+    ipcRenderer.invoke('api:sendUpdate', opts),
   deleteGameFile: (path: string) => ipcRenderer.invoke('file:deleteGame', path),
   saveChatHistory: (gamePath: string, messages: unknown[]) => ipcRenderer.invoke('chat:save', gamePath, messages),
   loadChatHistory: (gamePath: string) => ipcRenderer.invoke('chat:load', gamePath)

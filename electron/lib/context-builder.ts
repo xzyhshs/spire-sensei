@@ -39,15 +39,22 @@ const DEFAULT_PERSONA = `
 // ── Base rules (always applied regardless of character) ──
 
 const BASE_RULES = `
+## 截图铁律（最高优先级，先于所有其他规则执行）
+
+当用户消息包含截图时，在回答任何问题之前，必须先检查截图中是否有以下信息：
+- 层数 (floor)
+- 金币 (gold)
+- 生命值 (currentHp/maxHp)
+
+只要识别出任一项，立即调用 update_game_state 更新对应字段。此规则无条件执行——无论用户问的是选牌、策略、闲聊还是其他任何问题，截图中的血量/层数/金币更新永远是第一步。
+
+如果截图中确实没有这些信息（如纯卡牌/遗物选择画面），则跳过此步。
+
 ## 状态更新规则（严格限制）
 
 调用 update_game_state 函数的唯一条件：
 1. 用户消息带有【更新卡组】【更新遗物】【更新状态】标签，或
 2. 用户明确说"更新卡组""更新遗物""更新状态"等指令
-
-例外（视觉自动识别）：当用户发送截图且截图中包含以下信息时，必须调用 update_game_state 更新对应字段，无需用户明确指令：
-- 层数 (floor)、金币 (gold)、生命值 (currentHp/maxHp)
-如果截图中确实没有这些信息（如纯卡牌/遗物选择画面），则跳过。有则必须更新，禁止跳过。
 
 以下情况严禁调用 update_game_state：
 - 普通讨论卡牌/遗物策略（除非用户明确说要更新）
@@ -86,6 +93,52 @@ interface PromptOpts {
   customPersonaPrompt: string
   model: string
   userText?: string
+}
+
+/**
+ * Minimal prompt for pure update commands — skips character prompt entirely.
+ * Only BASE_RULES + game state. The AI only needs to call update_game_state.
+ */
+export function buildMinimalUpdatePrompt(gameState: GameState | null, userText?: string): string {
+  const parts: string[] = [
+    '你是一个游戏状态更新助手。用户会给你更新指令，你只需调用 update_game_state 工具执行更新，不要输出任何额外文字。',
+    '## 卡牌/遗物判别规则（严格执行）',
+    '对于 "+N XX" 和 "加 XX" 格式的指令，必须按以下顺序判断：',
+    '1. 检查下方"牌组卡牌数据"和"提及的卡牌数据"中是否包含 XX',
+    '2. 如果在卡牌数据中找到 XX → 使用 addCards，禁止使用 addRelics',
+    '3. 只有在用户明确说"遗物""加遗物""获得"时，才使用 addRelics',
+    '4. 默认按卡牌处理（addCards）',
+    BASE_RULES
+  ]
+
+  if (gameState) {
+    if (gameState.cards.length > 0) {
+      const countMap = new Map<string, number>()
+      const upgradeMap = new Map<string, boolean>()
+      for (const c of gameState.cards) {
+        countMap.set(c.name, c.count)
+        upgradeMap.set(c.name, c.upgraded)
+      }
+      const names = gameState.cards.map(c => c.name)
+      const cards = lookupCards(names)
+      if (cards.length > 0) {
+        const totalCards = gameState.cards.reduce((sum, c) => sum + c.count, 0)
+        parts.push(`\n## 牌组卡牌数据（共${totalCards}张）\n` + formatCardsForPrompt(cards, countMap, upgradeMap))
+      }
+    }
+    parts.push(`\n## 当前游戏状态\n\`\`\`json\n${JSON.stringify(gameState, null, 2)}\n\`\`\``)
+  }
+
+  // Inject mentioned cards from user text (not already in deck) — helps AI classify +N XX as card
+  if (userText) {
+    const deckNames = new Set(gameState?.cards.map(c => c.name) ?? [])
+    const mentioned = findMentionedCards(userText).filter(c => !deckNames.has(c.name))
+    if (mentioned.length > 0) {
+      parts.push('\n## 提及的卡牌数据（用户指令中提到的卡牌，用于判断 addCards/addRelics）\n' + formatCardsForPrompt(mentioned))
+    }
+  }
+
+  return parts.join('\n')
 }
 
 export function buildSystemPrompt(opts: PromptOpts): string {

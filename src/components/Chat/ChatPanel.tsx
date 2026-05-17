@@ -12,13 +12,14 @@ interface Props {
   receivedChars: number
   config: AppConfig
   currentPath: string | null
+  loading: boolean
   onConfigChange: (config: Partial<AppConfig>) => void
   onOpenSettings: () => void
   onSendMessage: (text: string, imageBase64?: string[]) => void
   onCancelMessage: () => void
 }
 
-export function ChatPanel({ messages, sendingPhase, elapsedSeconds, receivedChars, config, currentPath, onConfigChange, onOpenSettings, onSendMessage, onCancelMessage }: Props) {
+export function ChatPanel({ messages, sendingPhase, elapsedSeconds, receivedChars, config, currentPath, loading, onConfigChange, onOpenSettings, onSendMessage, onCancelMessage }: Props) {
   const messageListRef = useRef<HTMLDivElement>(null)
   const prevLenRef = useRef(messages.length)
 
@@ -60,7 +61,7 @@ export function ChatPanel({ messages, sendingPhase, elapsedSeconds, receivedChar
 
       {/* Messages */}
       <div ref={messageListRef} style={{ flex: 1, overflow: 'auto', padding: '20px' }}>
-        {messages.length === 0 ? (
+        {messages.length === 0 && !loading ? (
           <div style={{
             display: 'flex', flexDirection: 'column', alignItems: 'center',
             justifyContent: 'center', height: '100%', textAlign: 'center'
@@ -74,7 +75,30 @@ export function ChatPanel({ messages, sendingPhase, elapsedSeconds, receivedChar
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            {messages.map((msg) => (
+            {loading && (
+              <div style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: '40px 0',
+                gap: '12px'
+              }}>
+                <div style={{
+                  width: '32px',
+                  height: '32px',
+                  border: '3px solid var(--border-subtle)',
+                  borderTopColor: 'var(--gold)',
+                  borderRadius: '50%',
+                  animation: 'spin 0.8s linear infinite'
+                }} />
+                <span style={{
+                  fontSize: '13px',
+                  color: 'var(--text-muted)'
+                }}>正在切换存档...</span>
+              </div>
+            )}
+            {!loading && messages.map((msg) => (
               <MessageBubble key={msg.id} message={msg} />
             ))}
             {sendingPhase !== 'idle' && (
@@ -94,6 +118,7 @@ export function ChatPanel({ messages, sendingPhase, elapsedSeconds, receivedChar
         onCancel={onCancelMessage}
         disabled={sendingPhase !== 'idle'}
         hasGame={currentPath !== null}
+        loading={loading}
       />
     </>
   )

@@ -42,7 +42,6 @@ ${cardLines.join('\n')}
 # 遗物 (1)
 - ${ch.starting_relic.name}
 
-# 当前选项
 `
 }
 

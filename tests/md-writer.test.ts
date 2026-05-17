@@ -15,8 +15,7 @@ const sampleState = {
     { name: '痛击', upgraded: true, count: 1 },
     { name: '燃烧', upgraded: false, count: 1 }
   ],
-  relics: ['痛楚印记', '皇家枕套'],
-  options: '选择路线: 精英 / 篝火 / 商店'
+  relics: ['痛楚印记', '皇家枕套']
 }
 
 describe('writeGameMd', () => {
@@ -41,18 +40,11 @@ describe('writeGameMd', () => {
     expect(md).toContain('- 痛楚印记')
   })
 
-  it('writes current options section', () => {
-    const md = writeGameMd(sampleState)
-    expect(md).toContain('# 当前选项')
-    expect(md).toContain('- 选择路线: 精英 / 篝火 / 商店')
-  })
-
   it('round-trips through parser', () => {
     const md = writeGameMd(sampleState)
     const parsed = parseGameMd(md)
     expect(parsed.character).toBe(sampleState.character)
     expect(parsed.cards).toEqual(sampleState.cards)
     expect(parsed.relics).toEqual(sampleState.relics)
-    expect(parsed.options).toBe(sampleState.options)
   })
 })

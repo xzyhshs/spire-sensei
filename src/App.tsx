@@ -20,6 +20,7 @@ function App() {
     currentPath,
     savedGames,
     loading,
+    setLoading,
     createGame,
     switchGame,
     updateGameState,
@@ -47,9 +48,14 @@ function App() {
   }
 
   const handleCreateGame = async (character: string) => {
-    if (currentPath) await saveChatHistory(currentPath)
-    await createGame(character)
-    setMessages([])
+    setLoading(true)
+    try {
+      if (currentPath) await saveChatHistory(currentPath)
+      await createGame(character)
+      setMessages([])
+    } finally {
+      setLoading(false)
+    }
   }
 
   const handleSendMessage = async (text: string, imageBase64?: string[]) => {
@@ -60,9 +66,14 @@ function App() {
   }
 
   const handleSwitchGame = async (path: string) => {
-    if (currentPath) await saveChatHistory(currentPath)
-    await switchGame(path)
-    await loadChatHistory(path)
+    setLoading(true)
+    try {
+      if (currentPath) await saveChatHistory(currentPath)
+      await switchGame(path)
+      await loadChatHistory(path)
+    } finally {
+      setLoading(false)
+    }
   }
 
   const handleDeleteGame = async (path: string) => {

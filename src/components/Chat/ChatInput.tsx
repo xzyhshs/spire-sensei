@@ -6,6 +6,7 @@ interface Props {
   onCancel: () => void
   disabled?: boolean
   hasGame?: boolean
+  loading?: boolean
 }
 
 const MODES = [
@@ -14,7 +15,7 @@ const MODES = [
   { key: 'stats', label: '更新状态' }
 ]
 
-export function ChatInput({ onSend, onCancel, disabled, hasGame }: Props) {
+export function ChatInput({ onSend, onCancel, disabled, hasGame, loading }: Props) {
   const [text, setText] = useState('')
   const [images, setImages] = useState<string[]>([])
   const [activeModes, setActiveModes] = useState<Set<string>>(new Set())
@@ -22,7 +23,7 @@ export function ChatInput({ onSend, onCancel, disabled, hasGame }: Props) {
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   const canSend = text.trim() || images.length > 0
-  const inputDisabled = !hasGame
+  const inputDisabled = !hasGame || loading
 
   const addImage = async (base64: string) => {
     const compressed = await compressImage(base64)
@@ -245,7 +246,7 @@ export function ChatInput({ onSend, onCancel, disabled, hasGame }: Props) {
           onChange={(e) => setText(e.target.value)}
           onKeyDown={handleKeyDown}
           disabled={inputDisabled}
-          placeholder={inputDisabled ? '请先在左侧选择或创建游戏' : '描述情况或粘贴截图 (Ctrl+V)...'}
+          placeholder={loading ? '正在切换存档...' : inputDisabled ? '请先在左侧选择或创建游戏' : '描述情况或粘贴截图 (Ctrl+V)...'}
           rows={1}
           style={{
             flex: 1,

@@ -33,13 +33,5 @@ export function writeGameMd(state: GameState): string {
   }
   lines.push('')
 
-  // Current options
-  lines.push('# 当前选项')
-  if (state.options) {
-    for (const line of state.options.split('\n')) {
-      lines.push(`- ${line}`)
-    }
-  }
-
   return lines.join('\n') + '\n'
 }

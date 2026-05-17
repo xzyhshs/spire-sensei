@@ -1,5 +1,96 @@
 # 改动记录
 
+## v0.5.5 — 2026-05-17
+
+**铁甲战士/静默猎手/故障机器人角色 Prompt 重构**
+
+| 改动 | 涉及文件 |
+|------|------|
+| 铁甲战士 prompt 重写：对齐观者结构，砍掉优先判断表（~90行），禁止事项从 14→9 条 | `data/prompts/ironclad.ts` |
+| 静默猎手 prompt 新增（对标 ChatGPT 5.5 教学版） | `data/prompts/silent.ts` |
+| 故障机器人 prompt 新增（对标 ChatGPT 5.5 教学版） | `data/prompts/defect.ts` |
+| 注册静默猎手/故障机器人 prompt | `data/character-prompts.ts` |
+| 四个角色统一结构：角色设定→核心原则→决策流程→构筑方向→实战格式→阶段优先级→升级/删除→遗物配合→禁止事项 | — |
+
+## v0.5.4 — 2026-05-17
+
+**截图铁律：不管用户问什么，识别出血量/层数/金币就自动更新**
+
+| 改动 | 涉及文件 |
+|------|------|
+| BASE_RULES 新增"截图铁律"首段（最高优先级），无条件先更新再回答 | `electron/lib/context-builder.ts` |
+| 观者 prompt 截图规则提前到实战输出格式最前，强化措辞 | `data/prompts/watcher.ts` |
+| 铁甲战士 prompt 补充截图自动更新规则（之前缺失） | `data/prompts/ironclad.ts` |
+
+## v0.5.3 — 2026-05-17
+
+**切换存档时对话框显示加载指示器（防止用户以为卡死）**
+
+| 改动 | 涉及文件 |
+|------|------|
+| `useGameState` 暴露 `setLoading`，移除 `switchGame`/`createGame` 内部 loading 控制 | `src/hooks/useGameState.ts` |
+| `handleCreateGame`/`handleSwitchGame` 用 `setLoading` 包裹全流程（含 saveChatHistory + loadChatHistory） | `src/App.tsx` |
+| `ChatPanel` 接收 `loading` prop，loading 时显示旋转加载圈 + "正在切换存档..." | `src/components/Chat/ChatPanel.tsx` |
+| `AppLayout` 传递 `loading` 给 `ChatPanel` | `src/components/Layout/AppLayout.tsx` |
+| `ChatInput` 接收 `loading` prop，loading 时禁用输入 + placeholder 显示 "正在切换存档..." | `src/components/Chat/ChatInput.tsx` |
+| 添加 `@keyframes spin` 动画 | `src/styles/design-system.css` |
+
+## v0.5.2 — 2026-05-17
+
+**修复快速通道更新指令将卡牌误判为遗物（"+1不惧妖邪"→addRelics 而非 addCards）**
+
+| 改动 | 涉及文件 |
+|------|------|
+| `buildMinimalUpdatePrompt` 加 `userText` 参数，注入提及的卡牌数据 + 卡牌/遗物判别规则（+N XX 先查卡牌数据，命中则用 addCards，默认按卡牌处理） | `electron/lib/context-builder.ts` |
+| `sendUpdateCommand` 传入 `opts.text` 给 `buildMinimalUpdatePrompt` | `electron/lib/api-client.ts` |
+
+## v0.5.1 — 2026-05-17
+
+**修复图片在 Round 2 被重复发送（"截图+选哪张" 从 110s 降到 ~50s）**
+
+| 改动 | 涉及文件 |
+|------|------|
+| Round 2 前删掉用户消息中的图片内容，只保留文本，避免 DeepSeek 二次视觉编码 | `electron/lib/api-client.ts` |
+
+## v0.5.0 — 2026-05-17
+
+**更新指令快速通道（"+1 停顿" 从 ~60s 降到 ~5s）**
+
+| 改动 | 涉及文件 |
+|------|------|
+| 新增 `buildMinimalUpdatePrompt()` — 仅 BASE_RULES + 游戏状态，不含角色 prompt | `electron/lib/context-builder.ts` |
+| 新增 `sendUpdateCommand()` — 非流式、单次 API、强制 tool_choice、客户端合成回复 | `electron/lib/api-client.ts` |
+| 新增 `summarizeUpdate()` — 解析 tool call 参数生成中文确认文本 | `electron/lib/api-client.ts` |
+| 新增 `api:sendUpdate` IPC handler | `electron/main.ts` |
+| 新增 `isUpdateCommand()` — 正则匹配 +N/-N/加/删/升级/降级等 11 种更新指令模式 | `src/hooks/useChat.ts` |
+| sendMessage 检测更新指令后走快速通道，跳过流式、跳过第二次 API | `src/hooks/useChat.ts` |
+| preload + 类型声明 | `electron/preload.ts`, `src/types/electron.d.ts` |
+
+## v0.4.4 — 2026-05-17
+
+**移除"当前选项"功能**
+
+| 改动 | 涉及文件 |
+|------|------|
+| GameState 删除 `options` 字段 | `src/types/index.ts` |
+| 删除 Dashboard "当前选项" 面板 | `src/components/Dashboard/Dashboard.tsx` |
+| 删除 `parseOptions` 函数及调用 | `electron/lib/md-parser.ts` |
+| 删除 `# 当前选项` 写入段落 | `electron/lib/md-writer.ts` |
+| 删除 `options`/`clearOptions` 接口字段和更新逻辑 | `electron/lib/state-updater.ts` |
+| STATE_UPDATE_TOOL 删除 `options`/`clearOptions` 参数 | `electron/lib/api-client.ts` |
+| 初始模板删除 `# 当前选项` | `electron/lib/game-manager.ts` |
+| 测试文件同步清理 options 引用 | `tests/md-parser.test.ts`, `tests/md-writer.test.ts`, `tests/state-updater.test.ts`, `tests/context-builder.test.ts` |
+
+## v0.4.3 — 2026-05-17
+
+**修复输入框一段时间后卡死（sendingPhase 永不恢复 idle）**
+
+| 改动 | 涉及文件 |
+|------|------|
+| `api:sendMessageStream` handler 加 try/catch，同步操作异常时发送 `api:error` 事件 | `electron/main.ts` |
+| `onToolExecuting` 重置 `firstChunkRef`，避免 Round 2 流式阶段卡在 tool-executing | `src/hooks/useChat.ts` |
+| `sendMessageStream` invoke 加 `.catch()` 安全网，用 `streamResolverRef` resolve Promise 防永久挂起 | `src/hooks/useChat.ts` |
+
 ## v0.4.2 — 2026-05-17
 
 **消息发送进度指示器**

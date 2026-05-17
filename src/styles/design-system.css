@@ -184,6 +184,11 @@ body {
   color: var(--bg-deep);
 }
 
+/* === Keyframes === */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
 /* === Badge === */
 .badge {
   display: inline-block;

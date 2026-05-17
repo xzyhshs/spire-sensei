@@ -2,7 +2,7 @@ import { app, BrowserWindow, ipcMain } from 'electron'
 import path from 'path'
 import fs from 'fs'
 import { createGame, listGames, readGame, writeGame } from './lib/game-manager'
-import { sendMessage, sendMessageStream, PERSONAS } from './lib/api-client'
+import { sendMessage, sendMessageStream, sendUpdateCommand, PERSONAS } from './lib/api-client'
 import type { GameState } from '../src/types'
 
 let mainWindow: BrowserWindow | null = null
@@ -132,6 +132,7 @@ function registerIpcHandlers() {
     config?: Record<string, unknown>
     gamePath?: string | null
   }) => {
+    try {
     const diskConfig = loadConfig()
     const mergedConfig = { ...diskConfig, ...opts.config }
     const appConfig = {
@@ -187,6 +188,53 @@ function registerIpcHandlers() {
         mainWindow?.webContents.send('api:tool-executing', label)
       }
     }, abortController)
+    } catch (err) {
+      currentAbortController = null
+      const msg = err instanceof Error ? err.message : '未知错误'
+      mainWindow?.webContents.send('api:error', `API 请求失败：${msg}`)
+    }
+  })
+
+  // API: fast-path update command (non-streaming, minimal prompt)
+  ipcMain.handle('api:sendUpdate', async (_event, opts: {
+    text: string
+    config?: Record<string, unknown>
+    gamePath?: string | null
+  }) => {
+    try {
+      const diskConfig = loadConfig()
+      const mergedConfig = { ...diskConfig, ...opts.config }
+      const appConfig = {
+        vendorName: (mergedConfig.vendorName as string) || '',
+        apiKey: (mergedConfig.apiKey as string) || '',
+        baseUrl: (mergedConfig.baseUrl as string) || 'https://api.deepseek.com/v1',
+        model: (mergedConfig.model as string) || 'deepseek-v4-pro',
+        persona: (mergedConfig.persona as string) || 'default',
+        customPersonaPrompt: (mergedConfig.customPersonaPrompt as string) || ''
+      }
+
+      if (!appConfig.apiKey) {
+        return { reply: '请先在设置中配置 API Key。', stateUpdated: false }
+      }
+
+      const games = listGames(gamesDir)
+      const gamePath = opts.gamePath || (games.length > 0 ? games[0].path : null)
+      const gameState = gamePath ? readGame(gamePath) : null
+
+      const { reply, stateUpdated } = await sendUpdateCommand({
+        text: opts.text,
+        gameFilePath: gamePath,
+        config: appConfig,
+        persona: PERSONAS[0],
+        gameState
+      })
+
+      const updatedState = (stateUpdated && gamePath) ? readGame(gamePath) : null
+      return { reply, stateUpdated, gameState: updatedState }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : '未知错误'
+      return { reply: `更新失败：${msg}`, stateUpdated: false, gameState: null }
+    }
   })
 
   // API: cancel streaming
