@@ -1,12 +1,15 @@
 import { useRef, useEffect } from 'react'
-import type { ChatMessage, AppConfig } from '../../types'
+import type { ChatMessage, AppConfig, SendingPhase } from '../../types'
 import { MessageBubble } from './MessageBubble'
 import { ChatInput } from './ChatInput'
 import { ChatToolbar } from './ChatToolbar'
+import { ProgressIndicator } from './ProgressIndicator'
 
 interface Props {
   messages: ChatMessage[]
-  sending: boolean
+  sendingPhase: SendingPhase
+  elapsedSeconds: number
+  receivedChars: number
   config: AppConfig
   currentPath: string | null
   onConfigChange: (config: Partial<AppConfig>) => void
@@ -15,7 +18,7 @@ interface Props {
   onCancelMessage: () => void
 }
 
-export function ChatPanel({ messages, sending, config, currentPath, onConfigChange, onOpenSettings, onSendMessage, onCancelMessage }: Props) {
+export function ChatPanel({ messages, sendingPhase, elapsedSeconds, receivedChars, config, currentPath, onConfigChange, onOpenSettings, onSendMessage, onCancelMessage }: Props) {
   const messageListRef = useRef<HTMLDivElement>(null)
   const prevLenRef = useRef(messages.length)
 
@@ -74,35 +77,12 @@ export function ChatPanel({ messages, sending, config, currentPath, onConfigChan
             {messages.map((msg) => (
               <MessageBubble key={msg.id} message={msg} />
             ))}
-            {sending && (
-              <div style={{
-                alignSelf: 'flex-start',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '4px',
-                padding: '8px 16px'
-              }}>
-                <span style={{ color: 'var(--text-muted)', fontSize: '12px', marginRight: '4px' }}>思考中</span>
-                {[0, 1, 2].map(i => (
-                  <span
-                    key={i}
-                    style={{
-                      width: '5px',
-                      height: '5px',
-                      borderRadius: '50%',
-                      background: 'var(--gold-dim)',
-                      display: 'inline-block',
-                      animation: `senseiDotBounce 1.4s ease-in-out ${i * 0.2}s infinite`
-                    }}
-                  />
-                ))}
-                <style>{`
-                  @keyframes senseiDotBounce {
-                    0%, 80%, 100% { transform: translateY(0); opacity: 0.3; }
-                    40% { transform: translateY(-6px); opacity: 1; }
-                  }
-                `}</style>
-              </div>
+            {sendingPhase !== 'idle' && (
+              <ProgressIndicator
+                phase={sendingPhase}
+                elapsedSeconds={elapsedSeconds}
+                receivedChars={receivedChars}
+              />
             )}
           </div>
         )}
@@ -112,7 +92,7 @@ export function ChatPanel({ messages, sending, config, currentPath, onConfigChan
       <ChatInput
         onSend={onSendMessage}
         onCancel={onCancelMessage}
-        disabled={sending}
+        disabled={sendingPhase !== 'idle'}
         hasGame={currentPath !== null}
       />
     </>

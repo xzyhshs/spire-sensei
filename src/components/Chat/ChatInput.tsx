@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback } from 'react'
+import { compressImage } from '../../lib/image-compress'
 
 interface Props {
   onSend: (text: string, imageBase64?: string[]) => void
@@ -23,7 +24,10 @@ export function ChatInput({ onSend, onCancel, disabled, hasGame }: Props) {
   const canSend = text.trim() || images.length > 0
   const inputDisabled = !hasGame
 
-  const addImage = (base64: string) => setImages(prev => [...prev, base64])
+  const addImage = async (base64: string) => {
+    const compressed = await compressImage(base64)
+    setImages(prev => [...prev, compressed])
+  }
 
   const toggleMode = (key: string) => {
     setActiveModes(prev => {
@@ -44,7 +48,7 @@ export function ChatInput({ onSend, onCancel, disabled, hasGame }: Props) {
         const reader = new FileReader()
         reader.onload = () => {
           const base64 = (reader.result as string).split(',')[1]
-          addImage(base64)
+          void addImage(base64)
         }
         reader.readAsDataURL(file)
         return
@@ -59,7 +63,7 @@ export function ChatInput({ onSend, onCancel, disabled, hasGame }: Props) {
     const reader = new FileReader()
     reader.onload = () => {
       const base64 = (reader.result as string).split(',')[1]
-      addImage(base64)
+      void addImage(base64)
     }
     reader.readAsDataURL(file)
   }, [])
@@ -228,7 +232,7 @@ export function ChatInput({ onSend, onCancel, disabled, hasGame }: Props) {
             const reader = new FileReader()
             reader.onload = () => {
               const base64 = (reader.result as string).split(',')[1]
-              addImage(base64)
+              void addImage(base64)
             }
             reader.readAsDataURL(file)
           }}

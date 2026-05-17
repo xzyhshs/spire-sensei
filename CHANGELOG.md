@@ -1,5 +1,55 @@
 # 改动记录
 
+## v0.4.2 — 2026-05-17
+
+**消息发送进度指示器**
+
+| 改动 | 涉及文件 |
+|------|------|
+| 新增 `SendingPhase` 类型（idle/sending/waiting/receiving/tool-executing） | `src/types/index.ts` |
+| useChat 用 `sendingPhase` 替代 `sending`，加计时器 + 字数统计 | `src/hooks/useChat.ts` |
+| 新增 ProgressIndicator 组件：进度条 + 阶段标签 + 计时/字数 | `src/components/Chat/ProgressIndicator.tsx` |
+| ChatPanel 三点跳动替换为 ProgressIndicator | `src/components/Chat/ChatPanel.tsx` |
+| StreamCallbacks 加 `onToolExecuting` 回调，工具调用时通知渲染进程 | `electron/lib/api-client.ts` |
+| 转发 `api:tool-executing` 事件 | `electron/main.ts`, `electron/preload.ts` |
+| ElectronAPI 类型声明 + 组件 props 链路更新 | `src/types/electron.d.ts`, `src/App.tsx`, `src/components/Layout/AppLayout.tsx` |
+
+## v0.4.1 — 2026-05-17
+
+**修复更新指令时 AI 输出废话分析**
+
+| 改动 | 涉及文件 |
+|------|------|
+| 更新指令规则从"简短确认即可"改为"只更新不分析，禁止展开"，明确覆盖截图 + "【更新卡组】"场景 | `data/prompts/watcher.ts` |
+
+## v0.4.0 — 2026-05-17
+
+**观者 Prompt 补回复深度控制 + 截图自动更新提醒**
+
+| 改动 | 涉及文件 |
+|------|------|
+| 实战输出格式加触发条件：完整分析 vs 简短回复的场景区分 | `data/prompts/watcher.ts` |
+| 截图场景加 update_game_state 自动更新血量/层数/金币提醒 | `data/prompts/watcher.ts` |
+
+## v0.3.9 — 2026-05-17
+
+**替换观者 Prompt 为 ChatGPT 5.5 教学版**
+
+| 改动 | 涉及文件 |
+|------|------|
+| 观者 prompt 完全替换：五问决策框架 + 四步选牌流程 + 固定输出格式 + 10 条禁止事项 | `data/prompts/watcher.ts` |
+| 删除"当前玩家状态记录模板"（依赖 context-builder.ts 注入 JSON） | `data/prompts/watcher.ts` |
+
+## v0.3.8 — 2026-05-16
+
+**图片发送前自动压缩 + 角色 Prompt 拆分为独立文件**
+
+| 改动 | 涉及文件 |
+|------|------|
+| 新增 Canvas 缩放工具：宽度 >1280px 等比缩至 1280，JPEG 质量 70%，3MB→~150KB | `src/lib/image-compress.ts` |
+| ChatInput 粘贴/拖放/选文件三处发送前先压缩 | `src/components/Chat/ChatInput.tsx` |
+| 观者/铁甲战士 prompt 拆分为独立文件，便于维护 | `data/prompts/watcher.ts`, `data/prompts/ironclad.ts`, `data/character-prompts.ts` |
+
 ## v0.3.7 — 2026-05-16
 
 **修复 AI 截图后不自动更新左侧状态（血量/金币/层数）**

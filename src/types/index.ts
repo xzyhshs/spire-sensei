@@ -40,3 +40,5 @@ export interface AppConfig {
   persona: string
   customPersonaPrompt: string
 }
+
+export type SendingPhase = 'idle' | 'sending' | 'waiting' | 'receiving' | 'tool-executing'

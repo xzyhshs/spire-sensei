@@ -310,6 +310,7 @@ export interface StreamCallbacks {
   onChunk: (text: string) => void
   onDone: (result: { reply: string; stateUpdated: boolean }) => void
   onError: (err: Error) => void
+  onToolExecuting: (label: string) => void
 }
 
 export async function sendMessageStream(
@@ -353,10 +354,16 @@ export async function sendMessageStream(
     const lookupCalls = r1ToolCalls.filter(tc => tc.name === 'lookup_cards')
 
     // Execute state updates
+    if (stateCalls.length > 0) {
+      callbacks.onToolExecuting('正在更新游戏状态...')
+    }
     stateUpdated = applyStateUpdateFromToolCalls(stateCalls, opts)
 
     // Execute lookups and continue if any tool was called
     if (r1ToolCalls.length > 0) {
+      if (lookupCalls.length > 0) {
+        callbacks.onToolExecuting('正在查询卡牌数据...')
+      }
       // Append assistant message with tool calls
       const assistantMsg: Record<string, unknown> = { role: 'assistant', content: round1.fullReply || null }
       assistantMsg.tool_calls = r1ToolCalls.map(tc => ({

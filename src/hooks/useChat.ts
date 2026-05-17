@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef } from 'react'
-import type { ChatMessage, AppConfig, GameState } from '../types'
+import type { ChatMessage, AppConfig, GameState, SendingPhase } from '../types'
 import * as ipc from '../lib/ipc'
 
 const PERSONAS = [
@@ -18,11 +18,22 @@ interface SendOpts {
 
 export function useChat() {
   const [messages, setMessages] = useState<ChatMessage[]>([])
-  const [sending, setSending] = useState(false)
+  const [sendingPhase, setSendingPhase] = useState<SendingPhase>('idle')
+  const [elapsedSeconds, setElapsedSeconds] = useState(0)
+  const [receivedChars, setReceivedChars] = useState(0)
   const messagesRef = useRef<ChatMessage[]>([])
   messagesRef.current = messages
   const pendingChunkRef = useRef('')
   const rafPendingRef = useRef(false)
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const waitingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const charCountRef = useRef(0)
+  const firstChunkRef = useRef(false)
+
+  const clearPhaseTimer = useCallback(() => {
+    if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null }
+    if (waitingTimerRef.current) { clearTimeout(waitingTimerRef.current); waitingTimerRef.current = null }
+  }, [])
 
   const addMessage = useCallback((msg: ChatMessage) => {
     setMessages(prev => [...prev, msg])
@@ -44,11 +55,35 @@ export function useChat() {
       timestamp: Date.now()
     }
     setMessages(prev => [...prev, userMsg, aiMsg])
-    setSending(true)
+    setSendingPhase('sending')
+    setElapsedSeconds(0)
+    setReceivedChars(0)
+    charCountRef.current = 0
+    firstChunkRef.current = false
+
+    const startTime = Date.now()
+
+    // Elapsed time timer
+    timerRef.current = setInterval(() => {
+      setElapsedSeconds(Math.floor((Date.now() - startTime) / 1000))
+    }, 200)
+
+    // After 2s without response, switch to 'waiting'
+    waitingTimerRef.current = setTimeout(() => {
+      if (!firstChunkRef.current) {
+        setSendingPhase('waiting')
+      }
+    }, 2000)
 
     try {
       const result = await new Promise<GameState | null>((resolve) => {
         const unsubChunk = window.electronAPI.onStreamChunk((text) => {
+          if (!firstChunkRef.current) {
+            firstChunkRef.current = true
+            setSendingPhase('receiving')
+          }
+          charCountRef.current += text.length
+          setReceivedChars(charCountRef.current)
           pendingChunkRef.current += text
           if (!rafPendingRef.current) {
             rafPendingRef.current = true
@@ -63,8 +98,15 @@ export function useChat() {
           }
         })
 
+        const unsubToolExecuting = window.electronAPI.onToolExecuting((label) => {
+          setSendingPhase('tool-executing')
+          // Tool label is stored but simple phase is enough for now
+          void label
+        })
+
         const unsubDone = window.electronAPI.onStreamDone(({ gameState }) => {
           unsubChunk()
+          unsubToolExecuting()
           unsubDone()
           unsubError()
           if (pendingChunkRef.current) {
@@ -79,6 +121,7 @@ export function useChat() {
 
         const unsubError = window.electronAPI.onStreamError((msg) => {
           unsubChunk()
+          unsubToolExecuting()
           unsubDone()
           unsubError()
           setMessages(prev => prev.map(m =>
@@ -99,14 +142,16 @@ export function useChat() {
     } catch {
       return null
     } finally {
-      setSending(false)
+      clearPhaseTimer()
+      setSendingPhase('idle')
     }
-  }, [])
+  }, [clearPhaseTimer])
 
   const cancelMessage = useCallback(async () => {
     await window.electronAPI.cancelMessage()
-    setSending(false)
-  }, [])
+    clearPhaseTimer()
+    setSendingPhase('idle')
+  }, [clearPhaseTimer])
 
   // Persistence helpers — use ref so callers always get the latest messages
   const saveChatHistory = useCallback(async (gamePath: string) => {
@@ -119,5 +164,5 @@ export function useChat() {
     setMessages(msgs)
   }, [])
 
-  return { messages, sending, addMessage, sendMessage, cancelMessage, setMessages, saveChatHistory, loadChatHistory }
+  return { messages, sendingPhase, elapsedSeconds, receivedChars, addMessage, sendMessage, cancelMessage, setMessages, saveChatHistory, loadChatHistory }
 }

@@ -26,7 +26,7 @@ function App() {
     deleteGame
   } = useGameState()
 
-  const { messages, sending, sendMessage, cancelMessage, setMessages, saveChatHistory, loadChatHistory } = useChat()
+  const { messages, sendingPhase, elapsedSeconds, receivedChars, sendMessage, cancelMessage, setMessages, saveChatHistory, loadChatHistory } = useChat()
   const [config, setConfig] = useState<AppConfig>(DEFAULT_CONFIG)
   const [configLoaded, setConfigLoaded] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
@@ -77,7 +77,9 @@ function App() {
         savedGames={savedGames}
         loading={loading}
         config={config}
-        sending={sending}
+        sendingPhase={sendingPhase}
+        elapsedSeconds={elapsedSeconds}
+        receivedChars={receivedChars}
         onGameStateChange={updateGameState}
         onCreateGame={handleCreateGame}
         onSwitchGame={handleSwitchGame}

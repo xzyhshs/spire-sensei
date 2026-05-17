@@ -182,6 +182,9 @@ function registerIpcHandlers() {
         currentAbortController = null
         const msg = err.message || '未知错误'
         mainWindow?.webContents.send('api:error', `API 请求失败：${msg}`)
+      },
+      onToolExecuting(label) {
+        mainWindow?.webContents.send('api:tool-executing', label)
       }
     }, abortController)
   })
